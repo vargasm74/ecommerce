@@ -940,58 +940,45 @@ class ControladorUsuarios{
 	ELIMINAR USUARIO
 	=============================================*/
 
-	public function ctrEliminarUsuario(){
+	public static function ctrEliminarUsuario(){
 
-		if(isset($_GET["id"])){
+		if(!isset($_SESSION["id"])){
+			return "unauthorized";
+		}
 
-			$tabla1 = "usuarios";		
-			$tabla2 = "comentarios";
-			$tabla3 = "compras";
-			$tabla4 = "deseos";
+		$id = (int) $_SESSION["id"];
+		$usuario = ModeloUsuarios::mdlMostrarUsuario("usuarios", "id", $id);
 
-			$id = $_GET["id"];
+		if(!$usuario){
+			return "error";
+		}
 
-			if($_GET["foto"] != ""){
+		$respuesta = ModeloUsuarios::mdlEliminarCuentaCompleta($id);
 
-				unlink($_GET["foto"]);
-				rmdir('vistas/img/usuarios/'.$_GET["id"]);
+		if($respuesta !== "ok"){
+			return "error";
+		}
 
+		if($usuario["modo"] === "directo" && !empty($usuario["foto"])){
+
+			$directorioUsuario = dirname(__DIR__)."/vistas/img/usuarios/".$id;
+			$archivoFoto = $directorioUsuario."/".basename($usuario["foto"]);
+
+			if(is_file($archivoFoto)){
+				@unlink($archivoFoto);
 			}
 
-			$respuesta = ModeloUsuarios::mdlEliminarUsuario($tabla1, $id);
-			
-			ModeloUsuarios::mdlEliminarComentarios($tabla2, $id);
+			if(is_dir($directorioUsuario)){
+				$archivos = array_diff(scandir($directorioUsuario), array(".", ".."));
 
-			ModeloUsuarios::mdlEliminarCompras($tabla3, $id);
-
-			ModeloUsuarios::mdlEliminarListaDeseos($tabla4, $id);
-
-			if($respuesta == "ok"){
-
-		    	$url = Ruta::ctrRuta();
-
-		    	echo'<script>
-
-						swal({
-							  title: "¡SU CUENTA HA SIDO BORRADA!",
-							  text: "¡Debe registrarse nuevamente si desea ingresar!",
-							  type: "success",
-							  confirmButtonText: "Cerrar",
-							  closeOnConfirm: false
-						},
-
-						function(isConfirm){
-								 if (isConfirm) {	   
-								   window.location = "'.$url.'salir";
-								  } 
-						});
-
-					  </script>';
-
-		    }
+				if(count($archivos) === 0){
+					@rmdir($directorioUsuario);
+				}
+			}
 
 		}
 
-	}
+		return "ok";
 
+	}
 }
