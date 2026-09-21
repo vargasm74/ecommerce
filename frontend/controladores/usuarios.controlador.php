@@ -916,7 +916,7 @@ class ControladorUsuarios{
 
 	public function ctrActualizarComentario(){
 
-		if(isset($_POST["idComentario"])){
+		if(isset($_POST["idComentario"]) && isset($_SESSION["id"])){
 
 			if(preg_match('/^[,\\.\\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["comentario"])){
 
