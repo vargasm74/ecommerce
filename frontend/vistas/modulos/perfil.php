@@ -552,8 +552,7 @@ SECCIÓN PERFIL
 								
 							<?php
 
-							echo '<input type="hidden" value="'.$_SESSION["id"].'" id="idUsuario" name="idUsuario">
-							      <input type="hidden" value="'.$_SESSION["foto"].'" name="fotoUsuario" id="fotoUsuario">
+							echo '<input type="hidden" value="'.$_SESSION["foto"].'" name="fotoUsuario" id="fotoUsuario">
 							      <input type="hidden" value="'.$_SESSION["modo"].'" name="modoUsuario" id="modoUsuario">';
 
 
@@ -701,12 +700,6 @@ SECCIÓN PERFIL
 
 					<button class="btn btn-danger btn-md pull-right" id="eliminarUsuario">Eliminar cuenta</button>
 
-					<?php
-
-							$borrarUsuario = new ControladorUsuarios();
-							$borrarUsuario->ctrEliminarUsuario();
-
-						?>	
 
 				</div>
 
