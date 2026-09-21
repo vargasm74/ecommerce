@@ -650,6 +650,14 @@ INFOPRODUCTOS
 						? $infoproducto["precioOferta"]
 						: $infoproducto["precio"];
 
+					$cupoGratis = array_key_exists("cupoGratis", $infoproducto) && $infoproducto["cupoGratis"] !== null
+						? (int) $infoproducto["cupoGratis"]
+						: null;
+
+					$cupoGratisDisponible = $cupoGratis === null
+						? null
+						: max(0, $cupoGratis - (int) $infoproducto["ventasGratis"]);
+
 					$enDeseos = false;
 
 					if(isset($_SESSION["id"])){
@@ -667,9 +675,23 @@ INFOPRODUCTOS
 
 					if((float)$precioCompra == 0.0){
 
+						if($cupoGratisDisponible !== null){
+
+							echo '<div class="col-xs-12 text-center" style="margin-bottom:10px">
+								<span class="label label-info">'
+								.(int)$infoproducto["ventasGratis"].' solicitudes · '
+								.$cupoGratisDisponible.' disponibles de '.$cupoGratis.'
+								</span>
+							</div>';
+						}
+
 						echo '<div class="col-md-6 col-xs-12">';
 
-						if($infoproducto["tipo"]=="virtual"){
+						if($cupoGratisDisponible !== null && $cupoGratisDisponible <= 0){
+
+							echo '<button class="btn btn-default btn-block btn-lg" disabled>AGOTADO</button>';
+
+						}else if($infoproducto["tipo"]=="virtual"){
 
 							echo '<button
 								class="btn btn-default btn-block btn-lg backColor agregarGratis"
