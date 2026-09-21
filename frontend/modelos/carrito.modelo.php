@@ -39,6 +39,36 @@ class ModeloCarrito{
 	}
 
 	/*=============================================
+	REGLAS FISCALES ACTIVAS POR PAIS
+	=============================================*/
+
+	static public function mdlBuscarReglasFiscales($pais){
+
+		try{
+
+			$stmt = Conexion::conectar()->prepare(
+				"SELECT id, pais, region, tipo_producto, porcentaje, fecha_desde, fecha_hasta, descripcion
+				 FROM impuestos
+				 WHERE pais = :pais
+				   AND activo = 1
+				   AND fecha_desde <= CURRENT_DATE
+				   AND (fecha_hasta IS NULL OR fecha_hasta >= CURRENT_DATE)"
+			);
+
+			$stmt->bindValue(":pais", $pais, PDO::PARAM_STR);
+			$stmt->execute();
+
+			return $stmt->fetchAll();
+
+		}catch(PDOException $e){
+
+			error_log("Reglas fiscales no disponibles: ".$e->getMessage());
+			return array();
+
+		}
+	}
+
+	/*=============================================
 	NUEVAS COMPRAS
 	=============================================*/
 
