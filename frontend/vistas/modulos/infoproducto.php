@@ -42,7 +42,19 @@ INFOPRODUCTOS
 				$valor = $rutas[0];
 				$infoproducto = ControladorProductos::ctrMostrarInfoProducto($item, $valor);
 
-				$multimedia = json_decode($infoproducto["multimedia"],true);
+				$multimedia = json_decode($infoproducto["multimedia"], true);
+
+				if($infoproducto["tipo"] === "fisico"){
+
+					if(!is_array($multimedia) || count($multimedia) === 0){
+
+						$multimedia = array();
+
+						if(!empty($infoproducto["portada"])){
+							$multimedia[] = array("foto" => $infoproducto["portada"]);
+						}
+					}
+				}
 
 				/*=============================================
 				VISOR DE IMÁGENES
@@ -58,7 +70,7 @@ INFOPRODUCTOS
 
 								for($i = 0; $i < count($multimedia); $i ++){
 
-									echo '<img id="lupa'.($i+1).'" class="img-thumbnail" src="'.$servidor.$multimedia[$i]["foto"].'">';
+									echo '<img id="lupa'.($i+1).'" class="img-thumbnail" src="'.Seguridad::e($servidor.$multimedia[$i]["foto"]).'">';
 
 								}								
 
@@ -71,7 +83,7 @@ INFOPRODUCTOS
 								for($i = 0; $i < count($multimedia); $i ++){
 
 									echo '<li>
-								     	<img value="'.($i+1).'" class="img-thumbnail" src="'.$servidor.$multimedia[$i]["foto"].'" alt="'.Seguridad::e($infoproducto["titulo"]).'">
+								     	<img value="'.($i+1).'" class="img-thumbnail" src="'.Seguridad::e($servidor.$multimedia[$i]["foto"]).'" alt="'.Seguridad::e($infoproducto["titulo"]).'">
 								    </li>';
 
 								}
@@ -88,14 +100,44 @@ INFOPRODUCTOS
 				}else{
 
 					/*=============================================
-					VISOR DE VIDEO
+					VISOR DE VIDEO CON FALLBACK
 					=============================================*/
 
-					echo '<div class="col-sm-6 col-xs-12">
-							
-						<iframe class="videoPresentacion" src="https://www.youtube.com/embed/'.$infoproducto["multimedia"].'?rel=0&autoplay=0" width="100%" frameborder="0" allowfullscreen></iframe>
+					$videoId = trim((string) $infoproducto["multimedia"]);
+					$videoValido = preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId) === 1;
+					$portadaFallback = !empty($infoproducto["portada"])
+						? $servidor.$infoproducto["portada"]
+						: "";
 
-					</div>';
+					echo '<div class="col-sm-6 col-xs-12 mediaProductoVirtual">';
+
+					if($videoValido){
+
+						echo '<div
+								class="youtubePlayer videoPresentacion"
+								data-video-id="'.Seguridad::e($videoId).'">
+							</div>';
+					}
+
+					if($portadaFallback !== ""){
+
+						echo '<div class="videoFallback'.($videoValido ? '" style="display:none' : '').'">
+								<img
+									src="'.Seguridad::e($portadaFallback).'"
+									alt="'.Seguridad::e($infoproducto["titulo"]).'"
+									class="img-responsive img-thumbnail">
+								<p class="text-muted text-center">Vista previa del producto</p>
+							</div>';
+					}
+
+					if(!$videoValido && $portadaFallback === ""){
+
+						echo '<div class="alert alert-info">
+								El video de presentación no está disponible.
+							</div>';
+					}
+
+					echo '</div>';
 
 				}			
 
