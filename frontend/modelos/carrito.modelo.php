@@ -69,6 +69,107 @@ class ModeloCarrito{
 	}
 
 	/*=============================================
+	ADQUIRIR PRODUCTO GRATIS
+	=============================================*/
+
+	static public function mdlAdquirirProductoGratis($idUsuario, $idProducto, $email, $detalle){
+
+		$conexion = Conexion::conectar();
+
+		try{
+
+			$conexion->beginTransaction();
+
+			$stmt = $conexion->prepare(
+				"SELECT id, precio, precioOferta, ventasGratis
+				 FROM productos
+				 WHERE id = :id
+				 LIMIT 1
+				 FOR UPDATE"
+			);
+			$stmt->bindValue(":id", $idProducto, PDO::PARAM_INT);
+			$stmt->execute();
+
+			$producto = $stmt->fetch();
+
+			if(!$producto){
+				throw new RuntimeException("Producto inexistente");
+			}
+
+			$precioReal = (float) $producto["precioOferta"] > 0
+				? (float) $producto["precioOferta"]
+				: (float) $producto["precio"];
+
+			if($precioReal != 0.0){
+				throw new RuntimeException("El producto no es gratuito");
+			}
+
+			$stmt = $conexion->prepare(
+				"SELECT id FROM compras
+				 WHERE id_usuario = :id_usuario
+				   AND id_producto = :id_producto
+				 LIMIT 1"
+			);
+			$stmt->bindValue(":id_usuario", $idUsuario, PDO::PARAM_INT);
+			$stmt->bindValue(":id_producto", $idProducto, PDO::PARAM_INT);
+			$stmt->execute();
+
+			if($stmt->fetch()){
+				$conexion->rollBack();
+				return "existe";
+			}
+
+			$stmt = $conexion->prepare(
+				"INSERT INTO compras
+				 (id_usuario, id_producto, metodo, email, direccion, pais, cantidad, detalle, pago)
+				 VALUES
+				 (:id_usuario, :id_producto, 'gratis', :email, '', '', 1, :detalle, '0.00')"
+			);
+			$stmt->bindValue(":id_usuario", $idUsuario, PDO::PARAM_INT);
+			$stmt->bindValue(":id_producto", $idProducto, PDO::PARAM_INT);
+			$stmt->bindValue(":email", $email, PDO::PARAM_STR);
+			$stmt->bindValue(":detalle", $detalle, PDO::PARAM_STR);
+			$stmt->execute();
+
+			$stmt = $conexion->prepare(
+				"INSERT INTO comentarios (id_usuario, id_producto)
+				 SELECT :id_usuario, :id_producto
+				 WHERE NOT EXISTS (
+					 SELECT 1 FROM comentarios
+					 WHERE id_usuario = :id_usuario2
+					   AND id_producto = :id_producto2
+				 )"
+			);
+			$stmt->bindValue(":id_usuario", $idUsuario, PDO::PARAM_INT);
+			$stmt->bindValue(":id_producto", $idProducto, PDO::PARAM_INT);
+			$stmt->bindValue(":id_usuario2", $idUsuario, PDO::PARAM_INT);
+			$stmt->bindValue(":id_producto2", $idProducto, PDO::PARAM_INT);
+			$stmt->execute();
+
+			$stmt = $conexion->prepare(
+				"UPDATE productos
+				 SET ventasGratis = ventasGratis + 1
+				 WHERE id = :id"
+			);
+			$stmt->bindValue(":id", $idProducto, PDO::PARAM_INT);
+			$stmt->execute();
+
+			$conexion->commit();
+
+			return "ok";
+
+		}catch(Throwable $e){
+
+			if($conexion->inTransaction()){
+				$conexion->rollBack();
+			}
+
+			error_log("Adquisicion gratuita rechazada: ".$e->getMessage());
+			return "error";
+		}
+	}
+
+	/*=============================================
 	NUEVAS COMPRAS
 	=============================================*/
 
