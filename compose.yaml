@@ -10,6 +10,7 @@ services:
       APP_ENV: ${APP_ENV:-development}
       APP_URL: ${APP_URL:-http://localhost:8080/frontend/}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:8080/backend/}
+      EMAIL_VERIFICATION_ENABLED: ${EMAIL_VERIFICATION_ENABLED:-false}
 
       DB_HOST: db
       DB_PORT: 3306
