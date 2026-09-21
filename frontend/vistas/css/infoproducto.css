@@ -131,6 +131,14 @@ MOVIL (XS revisamos en 320px)
 MEDIA DEL PRODUCTO
 =============================================*/
 
+.mediaProductoVirtual{
+	position:relative;
+}
+
+.mediaProductoVirtual .youtubePlayerWrapper{
+	visibility:hidden;
+}
+
 .mediaProductoVirtual .youtubePlayer{
 	width:100%;
 	background:#f5f5f5;
@@ -144,6 +152,16 @@ MEDIA DEL PRODUCTO
 	justify-content:center;
 	background:#fafafa;
 	padding:15px;
+}
+
+.mediaProductoVirtual.tieneVideo .videoFallback{
+	position:absolute;
+	top:0;
+	left:15px;
+	right:15px;
+	bottom:0;
+	z-index:2;
+	margin:0;
 }
 
 .mediaProductoVirtual .videoFallback img{
