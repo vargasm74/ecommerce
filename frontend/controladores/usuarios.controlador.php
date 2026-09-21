@@ -654,7 +654,9 @@ class ControladorUsuarios{
 
 			if(isset($_FILES["datosImagen"]) && $_FILES["datosImagen"]["error"] !== UPLOAD_ERR_NO_FILE){
 
-				$archivo = $_FILES["datosImagen"];
+				try{
+
+					$archivo = $_FILES["datosImagen"];
 
 				if($archivo["error"] !== UPLOAD_ERR_OK){
 					throw new RuntimeException("Error al recibir la imagen");
@@ -759,7 +761,24 @@ class ControladorUsuarios{
 
 				}
 
-				$ruta = $rutaNueva;
+					$ruta = $rutaNueva;
+
+				}catch(Throwable $e){
+
+					error_log("Upload perfil rechazado para usuario ".$idUsuario.": ".$e->getMessage());
+
+					echo '<script>
+						swal({
+							title: "ERROR",
+							text: "La imagen no pudo ser procesada. Use JPG o PNG de hasta 5 MB.",
+							type: "error",
+							confirmButtonText: "Cerrar"
+						});
+					</script>';
+
+					return;
+
+				}
 
 			}
 
