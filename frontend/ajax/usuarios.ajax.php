@@ -119,6 +119,17 @@ REGISTRO CON FACEBOOK
 
 if(isset($_POST["email"])){
 
+	$facebookOauthEnabled = filter_var(
+		getenv("FACEBOOK_OAUTH_ENABLED") ?: "false",
+		FILTER_VALIDATE_BOOLEAN
+	);
+
+	if(!$facebookOauthEnabled){
+		http_response_code(404);
+		echo "disabled";
+		exit;
+	}
+
 	$regFacebook = new AjaxUsuarios();
 	$regFacebook -> email = $_POST["email"];
 	$regFacebook -> nombre = $_POST["nombre"];
