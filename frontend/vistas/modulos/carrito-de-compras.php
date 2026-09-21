@@ -266,7 +266,7 @@ VENTANA MODAL PARA CHECKOUT
 								</tr>
 
 								<tr>
-									<td>Impuesto (<span class="porcentajeImpuesto">0.00</span>%)</td>	
+									<td>Impuesto (<span class="reglaImpuesto">sin definir</span>)</td>	
 									<td><span class="cambioDivisa">USD</span> $<span class="valorTotalImpuesto" valor="0">0</span></td>	
 								</tr>
 
