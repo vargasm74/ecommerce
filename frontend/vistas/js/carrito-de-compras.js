@@ -1238,94 +1238,132 @@ function pagarConPayu(){
 /*=============================================
 AGREGAR PRODUCTOS GRATIS
 =============================================*/
-$(".agregarGratis").click(function(){
+$(document).on("click", ".agregarGratis", function(){
 
-	var idProducto = $(this).attr("idProducto");
-	var idUsuario = $(this).attr("idUsuario");
-	var tipo = $(this).attr("tipo");
-	var titulo = $(this).attr("titulo");
-	var agregarGratis = false;
+	var boton = $(this);
+	var idProducto = Number(boton.attr("idProducto"));
+	var tipo = boton.attr("tipo") || "";
+	var titulo = boton.attr("titulo") || "";
+	var detalle = titulo;
 
-	/*=============================================
-	VERIFICAR QUE NO TENGA EL PRODUCTO ADQUIRIDO
-	=============================================*/
+	if(!Number.isInteger(idProducto) || idProducto <= 0){
+		return;
+	}
+
+	if(tipo === "fisico"){
+
+		var seleccionarDetalle = $(".seleccionarDetalle");
+		var opciones = [];
+		var faltanOpciones = false;
+
+		seleccionarDetalle.each(function(){
+
+			var valor = $.trim($(this).val());
+
+			if(valor === ""){
+				faltanOpciones = true;
+				return false;
+			}
+
+			opciones.push(valor);
+		});
+
+		if(faltanOpciones){
+
+			swal({
+				title: "Complete las opciones del producto",
+				text: "Seleccione talla, color u otras opciones antes de solicitarlo.",
+				type: "warning",
+				confirmButtonText: "Cerrar"
+			});
+
+			return;
+		}
+
+		if(opciones.length){
+			detalle += " - " + opciones.join(" - ");
+		}
+	}
+
+	boton.prop("disabled", true);
 
 	var datos = new FormData();
-
-	datos.append("idUsuario", idUsuario);
+	datos.append("adquirirGratis", "1");
 	datos.append("idProducto", idProducto);
+	datos.append("detalle", detalle);
 
 	$.ajax({
 		url:rutaOculta+"ajax/carrito.ajax.php",
 		method:"POST",
-      	data: datos,
-      	cache: false,
-      	contentType: false,
-      	processData: false,
-      	success:function(respuesta){
-      	    
-      	    if(respuesta != "false"){
+		data:datos,
+		cache:false,
+		contentType:false,
+		processData:false,
+		success:function(respuesta){
 
-  	    		swal({
-				  title: "¡Usted ya adquirió este producto!",
-				  text: "",
-				  type: "warning",
-				  showCancelButton: false,
-				  confirmButtonColor: "#DD6B55",
-				  confirmButtonText: "Regresar",
-				  closeOnConfirm: false
-				})
+			respuesta = $.trim(respuesta);
 
+			if(respuesta === "ok"){
 
-      	    }else{
+				swal({
+					title: "Solicitud registrada",
+					text: tipo === "virtual"
+						? "El producto ya está disponible en Mis Compras."
+						: "La solicitud gratuita fue registrada en Mis Compras.",
+					type: "success",
+					confirmButtonText: "Ver mis compras"
+				}, function(){
+					window.location = rutaOculta+"perfil";
+				});
 
-				if(tipo == "virtual"){
+			}else if(respuesta === "existe"){
 
-					agregarGratis = true;
+				swal({
+					title: "Producto ya adquirido",
+					text: "Este producto ya figura en Mis Compras.",
+					type: "warning",
+					confirmButtonText: "Cerrar"
+				});
 
-				}else{
+			}else{
 
-					var seleccionarDetalle = $(".seleccionarDetalle");
+				swal({
+					title: "No se pudo completar",
+					text: "La solicitud no pudo ser registrada.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error:function(xhr){
 
-					for(var i = 0; i < seleccionarDetalle.length; i++){
+			if(xhr.status === 401){
 
-						if($(seleccionarDetalle[i]).val() == ""){
+				localStorage.setItem("rutaActual", window.location.href);
 
-								swal({
-									  title: "Debe seleccionar Talla y Color",
-									  text: "",
-									  type: "warning",
-									  showCancelButton: false,
-									  confirmButtonColor: "#DD6B55",
-									  confirmButtonText: "¡Seleccionar!",
-									  closeOnConfirm: false
-									})
+				swal({
+					title: "Debe ingresar al sistema",
+					text: "Inicie sesión para solicitar este producto.",
+					type: "warning",
+					confirmButtonText: "Ingresar"
+				}, function(){
+					$("#modalIngreso").modal("show");
+				});
 
-						}else{
+			}else{
 
-							titulo = titulo + "-" + $(seleccionarDetalle[i]).val();
-
-							agregarGratis = true;
-
-						}
-
-					}		
-
-				}
-
-				if(agregarGratis){
-
-					window.location = rutaOculta+"index.php?ruta=finalizar-compra&gratis=true&producto="+idProducto+"&titulo="+titulo;
-
-				}
-    	    
-      	    }
-
-      	}
-
-	})
-
-	
+				swal({
+					title: "Error",
+					text: "No se pudo procesar la solicitud.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		complete:function(){
+			boton.prop("disabled", false);
+		}
+	});
 
 })
 
