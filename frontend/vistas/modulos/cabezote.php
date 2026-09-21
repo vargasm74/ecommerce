@@ -420,6 +420,7 @@ VENTANA MODAL PARA EL REGISTRO
 			======================================-->
 
 			<form method="post" onsubmit="return registroUsuario()">
+				<input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 				
 			<hr>
 
@@ -566,6 +567,7 @@ VENTANA MODAL PARA EL INGRESO
 			======================================-->
 
 			<form method="post">
+				<input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 				
 			<hr>
 
@@ -654,6 +656,7 @@ VENTANA MODAL PARA OLVIDO DE CONTRASEÑA
 			======================================-->
 
 			<form method="post">
+				<input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 
 				<label class="text-muted">Escribe el correo electrónico con el que estás registrado y allí te enviaremos una nueva contraseña:</label>
 
