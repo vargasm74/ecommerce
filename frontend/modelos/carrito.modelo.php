@@ -23,6 +23,22 @@ class ModeloCarrito{
 	}
 
 	/*=============================================
+	PRODUCTO PARA CALCULO DE CHECKOUT
+	=============================================*/
+
+	static public function mdlObtenerProductoCheckout($id){
+
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT id, titulo, tipo, precio, precioOferta, peso FROM productos WHERE id = :id LIMIT 1"
+		);
+
+		$stmt->bindValue(":id", $id, PDO::PARAM_INT);
+		$stmt->execute();
+
+		return $stmt->fetch();
+	}
+
+	/*=============================================
 	NUEVAS COMPRAS
 	=============================================*/
 
