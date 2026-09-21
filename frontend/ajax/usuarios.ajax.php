@@ -53,13 +53,18 @@ class AjaxUsuarios{
 	AGREGAR A LISTA DE DESEOS
 	=============================================*/	
 
-	public $idUsuario;
 	public $idProducto;
 
 	public function ajaxAgregarDeseo(){
 
-		$datos = array("idUsuario"=>$this->idUsuario,
-					   "idProducto"=>$this->idProducto);
+		if(!isset($_SESSION["id"])){
+			http_response_code(401);
+			echo "unauthorized";
+			return;
+		}
+
+		$datos = array("idUsuario"=>(int) $_SESSION["id"],
+					   "idProducto"=>(int) $this->idProducto);
 
 		$respuesta = ControladorUsuarios::ctrAgregarDeseo($datos);
 
@@ -75,7 +80,16 @@ class AjaxUsuarios{
 
 	public function ajaxQuitarDeseo(){
 
-		$datos = $this->idDeseo;
+		if(!isset($_SESSION["id"])){
+			http_response_code(401);
+			echo "unauthorized";
+			return;
+		}
+
+		$datos = array(
+			"idDeseo" => (int) $this->idDeseo,
+			"idUsuario" => (int) $_SESSION["id"]
+		);
 
 		$respuesta = ControladorUsuarios::ctrQuitarDeseo($datos);
 
@@ -117,10 +131,9 @@ if(isset($_POST["email"])){
 AGREGAR A LISTA DE DESEOS
 =============================================*/	
 
-if(isset($_POST["idUsuario"])){
+if(isset($_POST["idProducto"])){
 
 	$deseo = new AjaxUsuarios();
-	$deseo -> idUsuario = $_POST["idUsuario"];
 	$deseo -> idProducto = $_POST["idProducto"];
 	$deseo ->ajaxAgregarDeseo();
 }
