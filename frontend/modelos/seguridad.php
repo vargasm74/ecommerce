@@ -2,8 +2,37 @@
 
 class Seguridad
 {
+    public static function enviarHeadersSeguridad(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        header("X-Content-Type-Options: nosniff");
+        header("Referrer-Policy: strict-origin-when-cross-origin");
+        header("X-Frame-Options: SAMEORIGIN");
+        header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+        header("Content-Security-Policy: frame-ancestors 'self'; base-uri 'self'; object-src 'none'");
+
+        $hstsEnabled = filter_var(
+            getenv("SECURITY_HSTS_ENABLED") ?: "false",
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        if ($hstsEnabled) {
+            $maxAge = (int) (getenv("SECURITY_HSTS_MAX_AGE") ?: 31536000);
+
+            if ($maxAge < 0) {
+                $maxAge = 31536000;
+            }
+
+            header("Strict-Transport-Security: max-age=".$maxAge);
+        }
+    }
+
     public static function iniciarSesion(): void
     {
+        self::enviarHeadersSeguridad();
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
