@@ -669,16 +669,29 @@ SECCIÓN PERFIL
 
 								<br>
 
-								<label class="control-label text-muted text-uppercase" for="editarPassword">Cambiar Contraseña:</label>
+								<label class="control-label text-muted text-uppercase" for="passwordActual">Contraseña actual:</label>
 
 								<div class="input-group">
-								
+
+										<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+										<input type="password" class="form-control" id="passwordActual" name="passwordActual" autocomplete="current-password" placeholder="Necesaria solo para cambiar la contraseña">
+
+									</div>
+
+								<br>
+
+								<label class="control-label text-muted text-uppercase" for="editarPassword">Nueva Contraseña:</label>
+
+								<div class="input-group">
+
 										<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
 										<input type="password" class="form-control" id="editarPassword" name="editarPassword" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Nueva contraseña (mínimo 8 caracteres)">
 
 									</div>
 
-								<br>
+								<small class="text-muted">Para cambiar la contraseña debe ingresar primero la contraseña actual. Si no desea cambiarla, deje ambos campos vacíos.</small>
+
+								<br><br>
 
 								<button type="submit" class="btn btn-default backColor btn-md pull-left">Actualizar Datos</button>';
 
