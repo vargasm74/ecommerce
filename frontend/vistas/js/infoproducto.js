@@ -1,4 +1,54 @@
 /*=============================================
+VIDEO DE PRODUCTO CON FALLBACK
+=============================================*/
+
+function mostrarFallbackVideo(){
+
+	$(".mediaProductoVirtual .youtubePlayer").hide();
+	$(".mediaProductoVirtual .videoFallback").show();
+
+}
+
+function inicializarVideoProducto(){
+
+	var contenedor = document.querySelector(".youtubePlayer");
+
+	if(!contenedor || typeof YT === "undefined" || typeof YT.Player === "undefined"){
+		return;
+	}
+
+	var videoId = contenedor.getAttribute("data-video-id");
+
+	new YT.Player(contenedor, {
+		width: "100%",
+		height: "100%",
+		videoId: videoId,
+		playerVars: {
+			rel: 0,
+			autoplay: 0,
+			origin: window.location.origin
+		},
+		events: {
+			onError: function(){
+				mostrarFallbackVideo();
+			}
+		}
+	});
+
+}
+
+if(document.querySelector(".youtubePlayer")){
+
+	window.onYouTubeIframeAPIReady = inicializarVideoProducto;
+
+	var youtubeApi = document.createElement("script");
+	youtubeApi.src = "https://www.youtube.com/iframe_api";
+	youtubeApi.async = true;
+	document.head.appendChild(youtubeApi);
+
+}
+
+/*=============================================
 CARRUSEL
 =============================================*/
 
