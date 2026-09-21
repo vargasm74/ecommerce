@@ -924,7 +924,8 @@ class ControladorUsuarios{
 
 					$tabla = "comentarios";
 
-					$datos = array("id"=>$_POST["idComentario"],
+					$datos = array("id"=>(int) $_POST["idComentario"],
+								   "idUsuario"=>(int) $_SESSION["id"],
 								   "calificacion"=>$_POST["puntaje"],
 								   "comentario"=>$_POST["comentario"]);
 
@@ -1007,6 +1008,10 @@ class ControladorUsuarios{
 	static public function ctrAgregarDeseo($datos){
 
 		$tabla = "deseos";
+
+		if(ModeloUsuarios::mdlExisteDeseo($tabla, $datos)){
+			return "existe";
+		}
 
 		$respuesta = ModeloUsuarios::mdlAgregarDeseo($tabla, $datos);
 
