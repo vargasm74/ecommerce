@@ -416,7 +416,6 @@ $(".deseos").click(function(){
 		$(this).addClass("btn-danger");
 
 		var datos = new FormData();
-		datos.append("idUsuario", idUsuario);
 		datos.append("idProducto", idProducto);
 
 		$.ajax({
@@ -472,32 +471,59 @@ ELIMINAR USUARIO
 
 $("#eliminarUsuario").click(function(){
 
-	var id = $("#idUsuario").val();
+	swal({
+		title: "¿Está usted seguro(a) de eliminar su cuenta?",
+		text: "¡Si borra esta cuenta ya no se pueden recuperar los datos!",
+		type: "warning",
+		showCancelButton: true,
+		confirmButtonColor: "#DD6B55",
+		confirmButtonText: "¡Sí, borrar cuenta!",
+		closeOnConfirm: false
+	},
+	function(isConfirm){
 
-	if($("#modoUsuario").val() == "directo"){
-
-		if($("#fotoUsuario").val() != ""){
-
-			var foto = $("#fotoUsuario").val();
-
+		if(!isConfirm){
+			return;
 		}
 
-	}
+		var datos = new FormData();
+		datos.append("eliminarCuenta", "1");
 
-	swal({
-		  title: "¿Está usted seguro(a) de eliminar su cuenta?",
-		  text: "¡Si borrar esta cuenta ya no se puede recuperar los datos!",
-		  type: "warning",
-		  showCancelButton: true,
-		  confirmButtonColor: "#DD6B55",
-		  confirmButtonText: "¡Si, borrar cuenta!",
-		  closeOnConfirm: false
-		},
-		function(isConfirm){
-				 if (isConfirm) {	   
-				    window.location = "index.php?ruta=perfil&id="+id+"&foto="+foto;
-				  } 
+		$.ajax({
+			url: rutaOculta+"ajax/usuarios.ajax.php",
+			method: "POST",
+			data: datos,
+			cache: false,
+			contentType: false,
+			processData: false,
+			success: function(respuesta){
+
+				if($.trim(respuesta) === "ok"){
+					window.location = rutaOculta+"salir";
+					return;
+				}
+
+				swal({
+					title: "ERROR",
+					text: "No se pudo eliminar la cuenta.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+
+			},
+			error: function(){
+
+				swal({
+					title: "ERROR",
+					text: "La solicitud no pudo ser validada.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+
+			}
 		});
+
+	});
 
 })
 
