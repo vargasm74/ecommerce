@@ -542,6 +542,115 @@ function cestaCarrito(cantidadProductos){
 }
 
 /*=============================================
+RESUMEN DE CHECKOUT CALCULADO POR EL SERVIDOR
+=============================================*/
+
+function actualizarResumenCheckout(pais, alFinalizar){
+
+	var botonesProducto = $(".cuerpoCarrito button, .comprarAhora button");
+	var cantidadesProducto = $(".cuerpoCarrito .cantidadItem, .comprarAhora .cantidadItem");
+	var ids = [];
+	var cantidades = [];
+
+	for(var i = 0; i < cantidadesProducto.length; i++){
+
+		var idProducto = Number($(botonesProducto[i]).attr("idProducto"));
+		var cantidad = Number($(cantidadesProducto[i]).val());
+
+		if(Number.isInteger(idProducto) && idProducto > 0 &&
+		   Number.isInteger(cantidad) && cantidad > 0){
+
+			ids.push(idProducto);
+			cantidades.push(cantidad);
+		}
+
+	}
+
+	if(ids.length === 0 || ids.length !== cantidades.length){
+		return;
+	}
+
+	var datos = new FormData();
+	datos.append("calcularCheckout", "1");
+	datos.append("productos", JSON.stringify(ids));
+	datos.append("cantidades", JSON.stringify(cantidades));
+	datos.append("pais", pais || "");
+
+	$.ajax({
+		url: rutaOculta+"ajax/carrito.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function(respuesta){
+
+			var tbody = $(".listaProductos table.tablaProductos tbody");
+			tbody.empty();
+
+			respuesta.productos.forEach(function(producto){
+
+				var fila = $("<tr>");
+				$("<td>").addClass("valorTitulo").text(producto.titulo).appendTo(fila);
+				$("<td>").addClass("valorCantidad").text(producto.cantidad).appendTo(fila);
+
+				var celdaPrecio = $("<td>");
+				celdaPrecio.append(document.createTextNode("$"));
+				$("<span>")
+					.addClass("valorItem")
+					.attr("valor", producto.subtotal)
+					.text(producto.subtotal)
+					.appendTo(celdaPrecio);
+
+				celdaPrecio.appendTo(fila);
+				fila.appendTo(tbody);
+			});
+
+			$(".cambioDivisa").text(respuesta.moneda);
+
+			$(".valorSubtotal")
+				.text(respuesta.subtotal)
+				.attr("valor", respuesta.subtotal);
+
+			$(".valorTotalEnvio")
+				.text(respuesta.envio)
+				.attr("valor", respuesta.envio);
+
+			$(".valorTotalImpuesto")
+				.text(respuesta.impuesto)
+				.attr("valor", respuesta.impuesto);
+
+			$(".valorTotalCompra")
+				.text(respuesta.total)
+				.attr("valor", respuesta.total);
+
+			localStorage.setItem("total", hex_md5(respuesta.total));
+
+			$(".btnPagar").prop("disabled", false);
+			$(".formPayu input[name='Submit']").prop("disabled", false);
+
+			if(typeof alFinalizar === "function"){
+				alFinalizar(respuesta);
+			}
+		},
+		error: function(){
+
+			$(".btnPagar").prop("disabled", true);
+			$(".formPayu input[name='Submit']").prop("disabled", true);
+
+			swal({
+				title: "No se pudo calcular la compra",
+				text: "Actualice el carrito e intente nuevamente.",
+				type: "error",
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+
+}
+
+/*=============================================
 /*=============================================
 /*=============================================
 /*=============================================
@@ -682,42 +791,10 @@ $("#btnCheckout").click(function(){
 			$(".alert").remove();
 
 			var pais = $(this).val();
-			var tasaPais = $("#tasaPais").val();
 
-			if(pais == tasaPais){
-
-				var resultadoPeso = sumaTotalPeso * $("#envioNacional").val();
-				
-				if(resultadoPeso < $("#tasaMinimaNal").val()){
-
-					$(".valorTotalEnvio").html($("#tasaMinimaNal").val());
-					$(".valorTotalEnvio").attr("valor", $("#tasaMinimaNal").val());
-
-				}else{
-
-					$(".valorTotalEnvio").html(resultadoPeso);
-					$(".valorTotalEnvio").attr("valor",resultadoPeso);
-				}
-
-			}else{
-
-				var resultadoPeso = sumaTotalPeso * $("#envioInternacional").val();
-				
-				if(resultadoPeso < $("#tasaMinimaInt").val()){
-
-					$(".valorTotalEnvio").html($("#tasaMinimaInt").val());
-					$(".valorTotalEnvio").attr("valor",$("#tasaMinimaInt").val());
-
-				}else{
-
-					$(".valorTotalEnvio").html(resultadoPeso);
-					$(".valorTotalEnvio").attr("valor",resultadoPeso);
-				}
-
-			}	
-
-			sumaTotalCompra();
-			pagarConPayu();
+			actualizarResumenCheckout(pais, function(){
+				pagarConPayu();
+			});
 
 		})
 
@@ -725,6 +802,8 @@ $("#btnCheckout").click(function(){
 
 		$(".btnPagar").attr("tipo","virtual");
 	}
+
+	actualizarResumenCheckout("");
 
 })
 
