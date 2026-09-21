@@ -15,6 +15,7 @@ SLIDESHOW
 			<?php
 
 				$servidor = Ruta::ctrRutaServidor();
+				$url = Ruta::ctrRuta();
 
 				$slide = ControladorSlide::ctrMostrarSlide();
 
@@ -46,13 +47,31 @@ SLIDESHOW
 
 									<h3 style="color:'.$titulo3["color"].'">'.$titulo3["texto"].'</h3>
 
-									<a href="'.$value["url"].'">
-										
-										'.$value["boton"].'
+									';
 
-									</a>
+									$urlSlide = trim((string) $value["url"]);
 
-								</div>	
+									if($urlSlide !== "" && $urlSlide !== "#"){
+
+										$hrefSlide = preg_match('#^https?://#i', $urlSlide)
+											? $urlSlide
+											: $url.ltrim($urlSlide, "/");
+
+										$textoBoton = trim(strip_tags((string) $value["boton"]));
+
+										if($textoBoton === ""){
+											$textoBoton = "VER PRODUCTOS";
+										}
+
+										echo '<a href="'.Seguridad::e($hrefSlide).'">
+											<button class="btn btn-default backColor text-uppercase">
+												'.Seguridad::e($textoBoton).'
+												<span class="fa fa-chevron-right"></span>
+											</button>
+										</a>';
+									}
+
+									echo '</div>	
 
 							</div>
 
