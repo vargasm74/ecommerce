@@ -6,7 +6,7 @@ class ControladorCarrito{
 	MOSTRAR TARIFAS
 	=============================================*/
 
-	public function ctrMostrarTarifas(){
+	public static function ctrMostrarTarifas(){
 
 		$tabla = "comercio";
 
