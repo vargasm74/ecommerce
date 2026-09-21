@@ -170,7 +170,7 @@ if(isset($_GET["ruta"])){
 	LISTA BLANCA DE URL'S AMIGABLES
 	=============================================*/
 
-	if($ruta != null || $rutas[0] == "articulos-gratis" || $rutas[0] == "lo-mas-vendido" || $rutas[0] == "lo-mas-visto"){
+	if($ruta != null || $rutas[0] == "articulos-gratis" || $rutas[0] == "lo-mas-vendido" || $rutas[0] == "lo-mas-visto" || $rutas[0] == "ofertas"){
 
 		include "modulos/productos.php";
 
