@@ -1,0 +1,8 @@
+# Directorio de archivos subidos por usuarios.
+# Nunca permitir ejecución de PHP u otros scripts desde aquí.
+
+Options -ExecCGI
+
+<FilesMatch "(?i)\.(php|phtml|phar|php[0-9]*)$">
+    Require all denied
+</FilesMatch>
