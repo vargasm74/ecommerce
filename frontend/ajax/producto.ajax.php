@@ -1,5 +1,9 @@
 <?php
 
+require_once "../modelos/seguridad.php";
+Seguridad::iniciarSesion();
+Seguridad::exigirCsrf();
+
 require_once "../controladores/productos.controlador.php";
 require_once "../modelos/productos.modelo.php";
 
