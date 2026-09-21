@@ -29,10 +29,11 @@ if(isset($_POST["calcularCheckout"])){
 	$ids = json_decode($_POST["productos"] ?? "[]", true);
 	$cantidades = json_decode($_POST["cantidades"] ?? "[]", true);
 	$pais = $_POST["pais"] ?? "";
+	$region = $_POST["region"] ?? "";
 
 	try{
 
-		$resumen = ControladorCarrito::ctrCalcularResumenCheckout($ids, $cantidades, $pais);
+		$resumen = ControladorCarrito::ctrCalcularResumenCheckout($ids, $cantidades, $pais, $region);
 
 		header("Content-Type: application/json; charset=UTF-8");
 		echo json_encode($resumen, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
