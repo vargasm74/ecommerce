@@ -219,7 +219,7 @@ class ModeloUsuarios{
 
 	static public function mdlAgregarDeseo($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (id_usuario, id_producto) VALUES (:id_usuario, :id_producto)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (id_usuario, id_producto, calificacion, comentario) VALUES (:id_usuario, :id_producto, 0, '')");
 
 		$stmt->bindParam(":id_usuario", $datos["idUsuario"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_producto", $datos["idProducto"], PDO::PARAM_INT);	
