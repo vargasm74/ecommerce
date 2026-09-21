@@ -542,6 +542,7 @@ SECCIÓN PERFIL
 				<div class="row">
 					
 					<form method="post" enctype="multipart/form-data">
+					<input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 					
 						<div class="col-md-3 col-sm-4 col-xs-12 text-center">
 							
@@ -732,6 +733,7 @@ VENTANA MODAL PARA COMENTARIOS
 			<button type="button" class="close" data-dismiss="modal">&times;</button>
 
 			<form method="post" onsubmit="return validarComentario()">
+					<input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 
 				<input type="hidden" value="" id="idComentario" name="idComentario">
 				
