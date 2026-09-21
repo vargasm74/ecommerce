@@ -270,6 +270,52 @@ class ModeloUsuarios{
 	}
 
 	/*=============================================
+	ELIMINAR CUENTA COMPLETA
+	=============================================*/
+
+	static public function mdlEliminarCuentaCompleta($id){
+
+		$conexion = Conexion::conectar();
+
+		try{
+
+			$conexion->beginTransaction();
+
+			$tablasRelacionadas = array("comentarios", "compras", "deseos");
+
+			foreach($tablasRelacionadas as $tabla){
+
+				$stmt = $conexion->prepare("DELETE FROM $tabla WHERE id_usuario = :id_usuario");
+				$stmt->bindValue(":id_usuario", $id, PDO::PARAM_INT);
+				$stmt->execute();
+
+			}
+
+			$stmt = $conexion->prepare("DELETE FROM usuarios WHERE id = :id");
+			$stmt->bindValue(":id", $id, PDO::PARAM_INT);
+			$stmt->execute();
+
+			if($stmt->rowCount() !== 1){
+				throw new RuntimeException("No se pudo eliminar el usuario");
+			}
+
+			$conexion->commit();
+
+			return "ok";
+
+		}catch(Throwable $e){
+
+			if($conexion->inTransaction()){
+				$conexion->rollBack();
+			}
+
+			return "error";
+
+		}
+
+	}
+
+	/*=============================================
 	ELIMINAR USUARIO
 	=============================================*/
 
