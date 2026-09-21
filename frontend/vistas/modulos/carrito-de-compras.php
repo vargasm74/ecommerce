@@ -235,7 +235,8 @@ VENTANA MODAL PARA CHECKOUT
 							<tr>		
 								<th>Producto</th>
 								<th>Cantidad</th>
-								<th>Precio</th>
+								<th>Precio unitario</th>
+								<th>Subtotal</th>
 							</tr>
 
 						 </thead>
@@ -265,7 +266,7 @@ VENTANA MODAL PARA CHECKOUT
 								</tr>
 
 								<tr>
-									<td>Impuesto</td>	
+									<td>Impuesto (<span class="porcentajeImpuesto">0.00</span>%)</td>	
 									<td><span class="cambioDivisa">USD</span> $<span class="valorTotalImpuesto" valor="0">0</span></td>	
 								</tr>
 
