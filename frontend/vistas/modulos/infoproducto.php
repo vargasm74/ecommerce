@@ -350,7 +350,7 @@ INFOPRODUCTOS
 										
 										<option value="">Talla</option>';
 
-										for($i = 0; $i <= count($detalles["Talla"]); $i++){
+										for($i = 0; $i < count($detalles["Talla"]); $i++){
 
 											echo '<option value="'.$detalles["Talla"][$i].'">'.$detalles["Talla"][$i].'</option>';
 
@@ -370,7 +370,7 @@ INFOPRODUCTOS
 										
 										<option value="">Color</option>';
 
-										for($i = 0; $i <= count($detalles["Color"]); $i++){
+										for($i = 0; $i < count($detalles["Color"]); $i++){
 
 											echo '<option value="'.$detalles["Color"][$i].'">'.$detalles["Color"][$i].'</option>';
 
@@ -390,7 +390,7 @@ INFOPRODUCTOS
 										
 										<option value="">Marca</option>';
 
-										for($i = 0; $i <= count($detalles["Marca"]); $i++){
+										for($i = 0; $i < count($detalles["Marca"]); $i++){
 
 											echo '<option value="'.$detalles["Marca"][$i].'">'.$detalles["Marca"][$i].'</option>';
 
@@ -708,7 +708,7 @@ INFOPRODUCTOS
 				
 				if($value["comentario"] != ""){
 
-					$cantidad += count($value["id"]);
+					$cantidad++;
 
 				}
 			}
@@ -739,7 +739,7 @@ INFOPRODUCTOS
 
 						if($value["calificacion"] != 0){
 
-							$cantidadCalificacion += count($value["id"]);
+							$cantidadCalificacion++;
 
 							$sumaCalificacion += $value["calificacion"];
 
@@ -747,7 +747,7 @@ INFOPRODUCTOS
 
 					}
 
-					$promedio = round($sumaCalificacion/$cantidadCalificacion,1);
+					$promedio = $cantidadCalificacion > 0 ? round($sumaCalificacion / $cantidadCalificacion, 1) : 0;
 
 					echo '<li class="pull-right"><a class="text-muted">PROMEDIO DE CALIFICACIÓN: '.$promedio.' | ';
 
