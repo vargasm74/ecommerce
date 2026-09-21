@@ -1,9 +1,11 @@
-# Impedir que se pueda ver el listado de contenidos de un directorio
-
-Options All -Indexes
-
-# Url Amigables
+Options -Indexes
 
 RewriteEngine On
 
-RewriteRule ^([-a-zA-Z0-9ñÑ_/]+)$ index.php?ruta=$1
+# No reescribir archivos ni directorios reales.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# URLs amigables: /frontend/calzado-para-dama -> index.php?ruta=calzado-para-dama
+# También acepta paginación/orden: /frontend/calzado-para-dama/2/recientes
+RewriteRule ^(.+?)/?$ index.php?ruta=$1 [QSA,L]
