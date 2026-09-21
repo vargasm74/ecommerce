@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce-app
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_URL: ${APP_URL:-http://localhost:8080/frontend/}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8080/backend/}
+
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-ecommerce}
+      DB_USER: ${DB_USER:-ecommerce}
+      DB_PASSWORD: ${DB_PASSWORD:-ecommerce}
+      DB_CHARSET: ${DB_CHARSET:-utf8mb4}
+
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      SECURITY_HSTS_ENABLED: ${SECURITY_HSTS_ENABLED:-false}
+      SECURITY_HSTS_MAX_AGE: ${SECURITY_HSTS_MAX_AGE:-31536000}
+
+      GOOGLE_OAUTH_ENABLED: ${GOOGLE_OAUTH_ENABLED:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/var/www/html/frontend/vistas/img/usuarios
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4.11
+    container_name: ecommerce-db
+    ports:
+      - "${DB_FORWARD_PORT:-3307}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-ecommerce_root}
+      MYSQL_DATABASE: ${DB_NAME:-ecommerce}
+      MYSQL_USER: ${DB_USER:-ecommerce}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ecommerce}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./ecommerce.sql:/docker-entrypoint-initdb.d/010-ecommerce.sql:ro
+      - ./database/migrations/20260921_001_reglas_fiscales.sql:/docker-entrypoint-initdb.d/020-reglas-fiscales.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads_data:
