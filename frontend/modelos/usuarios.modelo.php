@@ -173,11 +173,12 @@ class ModeloUsuarios{
 
 	static public function mdlActualizarComentario($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET calificacion = :calificacion, comentario = :comentario WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET calificacion = :calificacion, comentario = :comentario WHERE id = :id AND id_usuario = :id_usuario");
 
 		$stmt->bindParam(":calificacion", $datos["calificacion"], PDO::PARAM_STR);
 		$stmt->bindParam(":comentario", $datos["comentario"], PDO::PARAM_STR);
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario", $datos["idUsuario"], PDO::PARAM_INT);
 
 		if($stmt -> execute()){
 
@@ -193,6 +194,23 @@ class ModeloUsuarios{
 
 		$stmt = null;
 
+	}
+
+	/*=============================================
+	VALIDAR DESEO EXISTENTE
+	=============================================*/
+
+	static public function mdlExisteDeseo($tabla, $datos){
+
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT id FROM $tabla WHERE id_usuario = :id_usuario AND id_producto = :id_producto LIMIT 1"
+		);
+
+		$stmt->bindParam(":id_usuario", $datos["idUsuario"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_producto", $datos["idProducto"], PDO::PARAM_INT);
+		$stmt->execute();
+
+		return $stmt->fetch();
 	}
 
 	/*=============================================
