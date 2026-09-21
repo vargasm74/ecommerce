@@ -230,11 +230,13 @@ LISTAR PRODUCTOS
 
 			if(!$productos){
 
-				echo '<div class="col-xs-12 error404 text-center">
+				echo '<div class="col-xs-12 text-center" style="padding:60px 15px">
 
-						 <h1><small>¡Oops!</small></h1>
+						 <h2>Esta sección todavía no tiene productos disponibles</h2>
 
-						 <h2>Aún no hay productos en esta sección</h2>
+						 <p class="text-muted">Podés volver al inicio o explorar otra categoría.</p>
+
+						 <a class="btn btn-default backColor" href="'.$url.'">Volver al inicio</a>
 
 					</div>';
 
