@@ -35,6 +35,16 @@ CREAR EL OBJETO DE LA API GOOGLE
 $rutaGoogle = "#";
 $cliente = null;
 
+$facebookOauthEnabled = filter_var(
+    getenv("FACEBOOK_OAUTH_ENABLED") ?: "false",
+    FILTER_VALIDATE_BOOLEAN
+);
+
+$microsoftOauthEnabled = MicrosoftOAuth::configurado();
+$rutaMicrosoft = $microsoftOauthEnabled
+    ? MicrosoftOAuth::rutaAutorizacion()
+    : "#";
+
 $googleOauthEnabled = filter_var(
     getenv("GOOGLE_OAUTH_ENABLED") ?: "false",
     FILTER_VALIDATE_BOOLEAN
@@ -200,6 +210,18 @@ TOP
 
 									<img class="img-circle" src="'.$_SESSION["foto"].'" width="10%">
 
+								   </li>
+								   <li>|</li>
+						 		   <li><a href="'.$url.'perfil">Ver Perfil</a></li>
+						 		   <li>|</li>
+						 		   <li><a href="'.$url.'salir">Salir</a></li>';
+
+						}
+
+						if($_SESSION["modo"] == "microsoft"){
+
+							echo '<li>
+									<img class="img-circle" src="'.$servidor.'vistas/img/usuarios/default/anonymous.png" width="10%">
 								   </li>
 								   <li>|</li>
 						 		   <li><a href="'.$url.'perfil">Ver Perfil</a></li>
@@ -391,29 +413,39 @@ VENTANA MODAL PARA EL REGISTRO
 			REGISTRO FACEBOOK
 			======================================-->
 
+<?php if($facebookOauthEnabled){ ?>
 			<div class="col-sm-6 col-xs-12 facebook">
-				
 				<p>
 				  <i class="fa fa-facebook"></i>
 					Registro con Facebook
 				</p>
-
 			</div>
+			<?php } ?>
 
 			<!--=====================================
 			REGISTRO GOOGLE
 			======================================-->
-			<a href="<?php echo $rutaGoogle; ?>">
-
+<?php if($googleOauthEnabled){ ?>
+			<a href="<?php echo Seguridad::e($rutaGoogle); ?>">
 				<div class="col-sm-6 col-xs-12 google">
-					
 					<p>
 					  <i class="fa fa-google"></i>
 						Registro con Google
 					</p>
-
 				</div>
 			</a>
+			<?php } ?>
+
+			<?php if($microsoftOauthEnabled){ ?>
+			<a href="<?php echo Seguridad::e($rutaMicrosoft); ?>">
+				<div class="col-sm-12 col-xs-12 microsoft">
+					<p>
+					  <i class="fa fa-windows"></i>
+						Registro con Microsoft (Hotmail / Outlook)
+					</p>
+				</div>
+			</a>
+			<?php } ?>
 
 			<!--=====================================
 			REGISTRO DIRECTO
@@ -537,30 +569,39 @@ VENTANA MODAL PARA EL INGRESO
 			INGRESO FACEBOOK
 			======================================-->
 
+<?php if($facebookOauthEnabled){ ?>
 			<div class="col-sm-6 col-xs-12 facebook">
-				
 				<p>
 				  <i class="fa fa-facebook"></i>
 					Ingreso con Facebook
 				</p>
-
 			</div>
+			<?php } ?>
 
 			<!--=====================================
 			INGRESO GOOGLE
 			======================================-->
-			<a href="<?php echo $rutaGoogle; ?>">
-			
+<?php if($googleOauthEnabled){ ?>
+			<a href="<?php echo Seguridad::e($rutaGoogle); ?>">
 				<div class="col-sm-6 col-xs-12 google">
-					
 					<p>
 					  <i class="fa fa-google"></i>
 						Ingreso con Google
 					</p>
-
 				</div>
-
 			</a>
+			<?php } ?>
+
+			<?php if($microsoftOauthEnabled){ ?>
+			<a href="<?php echo Seguridad::e($rutaMicrosoft); ?>">
+				<div class="col-sm-12 col-xs-12 microsoft">
+					<p>
+					  <i class="fa fa-windows"></i>
+						Ingreso con Microsoft (Hotmail / Outlook)
+					</p>
+				</div>
+			</a>
+			<?php } ?>
 
 			<!--=====================================
 			INGRESO DIRECTO
