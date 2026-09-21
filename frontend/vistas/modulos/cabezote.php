@@ -498,7 +498,7 @@ VENTANA MODAL PARA EL REGISTRO
 						
 						</span>
 
-						<input type="password" class="form-control" id="regPassword" name="regPassword" placeholder="Contraseña" required>
+						<input type="password" class="form-control" id="regPassword" name="regPassword" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Contraseña (mínimo 8 caracteres)" required>
 
 					</div>
 
