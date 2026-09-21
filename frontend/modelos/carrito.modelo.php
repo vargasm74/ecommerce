@@ -81,7 +81,7 @@ class ModeloCarrito{
 			$conexion->beginTransaction();
 
 			$stmt = $conexion->prepare(
-				"SELECT id, precio, precioOferta, ventasGratis
+				"SELECT id, precio, precioOferta, ventasGratis, cupoGratis
 				 FROM productos
 				 WHERE id = :id
 				 LIMIT 1
@@ -102,6 +102,15 @@ class ModeloCarrito{
 
 			if($precioReal != 0.0){
 				throw new RuntimeException("El producto no es gratuito");
+			}
+
+			$cupoGratis = $producto["cupoGratis"] === null
+				? null
+				: (int) $producto["cupoGratis"];
+
+			if($cupoGratis !== null && (int) $producto["ventasGratis"] >= $cupoGratis){
+				$conexion->rollBack();
+				return "agotado";
 			}
 
 			$stmt = $conexion->prepare(
@@ -132,8 +141,8 @@ class ModeloCarrito{
 			$stmt->execute();
 
 			$stmt = $conexion->prepare(
-				"INSERT INTO comentarios (id_usuario, id_producto)
-				 SELECT :id_usuario, :id_producto
+				"INSERT INTO comentarios (id_usuario, id_producto, calificacion, comentario)
+				 SELECT :id_usuario, :id_producto, 0, ''
 				 WHERE NOT EXISTS (
 					 SELECT 1 FROM comentarios
 					 WHERE id_usuario = :id_usuario2
