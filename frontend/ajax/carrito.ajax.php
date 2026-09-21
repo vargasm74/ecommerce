@@ -12,6 +12,43 @@ require_once "../modelos/carrito.modelo.php";
 require_once "../controladores/productos.controlador.php";
 require_once "../modelos/productos.modelo.php";
 
+
+/*=============================================
+RESUMEN SEGURO DE CHECKOUT
+=============================================*/
+
+if(isset($_POST["calcularCheckout"])){
+
+	if(!isset($_SESSION["id"])){
+		http_response_code(401);
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode(array("error" => "Debe iniciar sesion"));
+		exit;
+	}
+
+	$ids = json_decode($_POST["productos"] ?? "[]", true);
+	$cantidades = json_decode($_POST["cantidades"] ?? "[]", true);
+	$pais = $_POST["pais"] ?? "";
+
+	try{
+
+		$resumen = ControladorCarrito::ctrCalcularResumenCheckout($ids, $cantidades, $pais);
+
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode($resumen, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+	}catch(Throwable $e){
+
+		error_log("Checkout rechazado: ".$e->getMessage());
+		http_response_code(422);
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode(array("error" => "No se pudo calcular el carrito"));
+
+	}
+
+	exit;
+}
+
 class AjaxCarrito{
 
 	/*=============================================
