@@ -60,6 +60,7 @@ services:
       - ./ecommerce.sql:/docker-entrypoint-initdb.d/010-ecommerce.sql:ro
       - ./database/migrations/20260921_001_reglas_fiscales.sql:/docker-entrypoint-initdb.d/020-reglas-fiscales.sql:ro
       - ./database/migrations/20260921_002_slide_links.sql:/docker-entrypoint-initdb.d/030-slide-links.sql:ro
+      - ./database/migrations/20260921_003_cupo_productos_gratis.sql:/docker-entrypoint-initdb.d/040-cupo-gratis.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 5s
