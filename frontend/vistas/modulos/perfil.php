@@ -596,7 +596,7 @@ SECCIÓN PERFIL
 
 							<div id="subirImagen">
 								
-								<input type="file" class="form-control" id="datosImagen" name="datosImagen">
+								<input type="file" class="form-control" id="datosImagen" name="datosImagen" accept="image/jpeg,image/png">
 
 								<img class="previsualizar">
 
