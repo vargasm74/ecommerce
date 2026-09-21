@@ -552,15 +552,15 @@ SECCIÓN PERFIL
 								
 							<?php
 
-							echo '<input type="hidden" value="'.$_SESSION["foto"].'" name="fotoUsuario" id="fotoUsuario">
-							      <input type="hidden" value="'.$_SESSION["modo"].'" name="modoUsuario" id="modoUsuario">';
+							echo '<input type="hidden" value="'.Seguridad::e($_SESSION["foto"]).'" name="fotoUsuario" id="fotoUsuario">
+							      <input type="hidden" value="'.Seguridad::e($_SESSION["modo"]).'" name="modoUsuario" id="modoUsuario">';
 
 
 							if($_SESSION["modo"] == "directo"){
 
 								if($_SESSION["foto"] != ""){
 
-									echo '<img src="'.$url.$_SESSION["foto"].'" class="img-thumbnail">';
+									echo '<img src="'.$url.Seguridad::e($_SESSION["foto"]).'" class="img-thumbnail">';
 
 								}else{
 
@@ -571,7 +571,7 @@ SECCIÓN PERFIL
 
 							}else{
 
-								echo '<img src="'.$_SESSION["foto"].'" class="img-thumbnail">';
+								echo '<img src="'.Seguridad::e($_SESSION["foto"]).'" class="img-thumbnail">';
 							}		
 
 							?>
@@ -617,7 +617,7 @@ SECCIÓN PERFIL
 									<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-										<input type="text" class="form-control"  value="'.$_SESSION["nombre"].'" readonly>
+										<input type="text" class="form-control"  value="'.Seguridad::e($_SESSION["nombre"]).'" readonly>
 
 									</div>
 
@@ -628,7 +628,7 @@ SECCIÓN PERFIL
 									<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-										<input type="text" class="form-control"  value="'.$_SESSION["email"].'" readonly>
+										<input type="text" class="form-control"  value="'.Seguridad::e($_SESSION["email"]).'" readonly>
 
 									</div>
 
@@ -638,8 +638,8 @@ SECCIÓN PERFIL
 									
 									<div class="input-group">
 								
-										<span class="input-group-addon"><i class="fa fa-'.$_SESSION["modo"].'"></i></span>
-										<input type="text" class="form-control text-uppercase"  value="'.$_SESSION["modo"].'" readonly>
+										<span class="input-group-addon"><i class="fa fa-'.Seguridad::e($_SESSION["modo"]).'"></i></span>
+										<input type="text" class="form-control text-uppercase"  value="'.Seguridad::e($_SESSION["modo"]).'" readonly>
 
 									</div>
 
@@ -653,7 +653,7 @@ SECCIÓN PERFIL
 									<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-										<input type="text" class="form-control" id="editarNombre" name="editarNombre" value="'.$_SESSION["nombre"].'">
+										<input type="text" class="form-control" id="editarNombre" name="editarNombre" value="'.Seguridad::e($_SESSION["nombre"]).'">
 
 									</div>
 
@@ -664,7 +664,7 @@ SECCIÓN PERFIL
 								<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-										<input type="text" class="form-control" id="editarEmail" name="editarEmail" value="'.$_SESSION["email"].'">
+										<input type="text" class="form-control" id="editarEmail" name="editarEmail" value="'.Seguridad::e($_SESSION["email"]).'">
 
 									</div>
 
