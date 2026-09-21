@@ -10,33 +10,70 @@ class ControladorUsuarios{
 
 		if(isset($_POST["regUsuario"])){
 
-			if(preg_match('/^[a-zA-ZñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["regUsuario"]) &&
-			   preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["regEmail"]) &&
-			   preg_match('/^[a-zA-Z0-9]+$/', $_POST["regPassword"])){
+			$nombre = trim((string) $_POST["regUsuario"]);
+			$email = strtolower(trim((string) $email));
+			$passwordPlano = (string) $_POST["regPassword"];
 
-			   	$encriptar = password_hash($_POST["regPassword"], PASSWORD_DEFAULT);
+			$nombreValido = preg_match("/^[\\p{L} .'-]{2,100}$/u", $nombre) === 1;
+			$emailValido = filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+			$passwordValida = strlen($passwordPlano) >= 8 && strlen($passwordPlano) <= 72;
 
-			   	$encriptarEmail = md5($_POST["regEmail"]);
-
-				$datos = array("nombre"=>$_POST["regUsuario"],
-							   "password"=> $encriptar,
-							   "email"=> $_POST["regEmail"],
-							   "foto"=>"",
-							   "modo"=> "directo",
-							   "verificacion"=> 1,
-							   "emailEncriptado"=>$encriptarEmail);
+			if($nombreValido && $emailValido && $passwordValida){
 
 				$tabla = "usuarios";
+				$usuarioExistente = ModeloUsuarios::mdlMostrarUsuario($tabla, "email", $email);
+
+				if($usuarioExistente){
+					echo '<script>
+						swal({
+							title: "¡ERROR!",
+							text: "El correo electrónico ya está registrado.",
+							type: "error",
+							confirmButtonText: "Cerrar"
+						});
+					</script>';
+					return;
+				}
+
+				$emailVerificationEnabled = filter_var(
+					getenv("EMAIL_VERIFICATION_ENABLED") ?: "false",
+					FILTER_VALIDATE_BOOLEAN
+				);
+
+				$encriptar = password_hash($passwordPlano, PASSWORD_DEFAULT);
+				$encriptarEmail = $emailVerificationEnabled ? md5($email) : "";
+
+				$datos = array("nombre"=>$nombre,
+							   "password"=>$encriptar,
+							   "email"=>$email,
+							   "foto"=>"",
+							   "modo"=>"directo",
+							   "verificacion"=>$emailVerificationEnabled ? 1 : 0,
+							   "emailEncriptado"=>$encriptarEmail);
 
 				$respuesta = ModeloUsuarios::mdlRegistroUsuario($tabla, $datos);
 
 				if($respuesta == "ok"){
 
+					if(!$emailVerificationEnabled){
+
+						echo '<script>
+							swal({
+								title: "¡OK!",
+								text: "Cuenta creada correctamente. Ya puede iniciar sesión.",
+								type: "success",
+								confirmButtonText: "Cerrar"
+							});
+						</script>';
+
+						return;
+					}
+
 					/*=============================================
 					VERIFICACIÓN CORREO ELECTRÓNICO
 					=============================================*/
 
-					date_default_timezone_set("America/Bogota");
+					date_default_timezone_set("America/Argentina/Buenos_Aires");
 
 					$url = Ruta::ctrRuta();	
 
@@ -52,7 +89,7 @@ class ControladorUsuarios{
 
 					$mail->Subject = "Por favor verifique su dirección de correo electrónico";
 
-					$mail->addAddress($_POST["regEmail"]);
+					$mail->addAddress($email);
 
 					$mail->msgHTML('<div style="width:100%; background:#eee; position:relative; font-family:sans-serif; padding-bottom:40px">
 						
@@ -100,7 +137,7 @@ class ControladorUsuarios{
 
 							swal({
 								  title: "¡ERROR!",
-								  text: "¡Ha ocurrido un problema enviando verificación de correo electrónico a '.$_POST["regEmail"].$mail->ErrorInfo.'!",
+								  text: "¡Ha ocurrido un problema enviando verificación de correo electrónico a '.$email.$mail->ErrorInfo.'!",
 								  type:"error",
 								  confirmButtonText: "Cerrar",
 								  closeOnConfirm: false
@@ -121,7 +158,7 @@ class ControladorUsuarios{
 
 							swal({
 								  title: "¡OK!",
-								  text: "¡Por favor revise la bandeja de entrada o la carpeta de SPAM de su correo electrónico '.$_POST["regEmail"].' para verificar la cuenta!",
+								  text: "¡Por favor revise la bandeja de entrada o la carpeta de SPAM de su correo electrónico '.$email.' para verificar la cuenta!",
 								  type:"success",
 								  confirmButtonText: "Cerrar",
 								  closeOnConfirm: false
@@ -203,24 +240,26 @@ class ControladorUsuarios{
 
 		if(isset($_POST["ingEmail"])){
 
-			if(preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["ingEmail"]) &&
-			   preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingPassword"])){
+			$emailIngreso = strtolower(trim((string) $_POST["ingEmail"]));
+			$passwordIngreso = (string) $_POST["ingPassword"];
+
+			if(filter_var($emailIngreso, FILTER_VALIDATE_EMAIL) !== false && $passwordIngreso !== ""){
 
 				$tabla = "usuarios";
 				$item = "email";
-				$valor = $_POST["ingEmail"];
+				$valor = $emailIngreso;
 
 				$respuesta = ModeloUsuarios::mdlMostrarUsuario($tabla, $item, $valor);
 
 				$passwordValida = is_array($respuesta)
 					&& isset($respuesta["password"])
-					&& password_verify($_POST["ingPassword"], $respuesta["password"]);
+					&& password_verify($passwordIngreso, $respuesta["password"]);
 
 				if($passwordValida){
 
 					if(password_needs_rehash($respuesta["password"], PASSWORD_DEFAULT)){
 
-						$nuevoHash = password_hash($_POST["ingPassword"], PASSWORD_DEFAULT);
+						$nuevoHash = password_hash($passwordIngreso, PASSWORD_DEFAULT);
 
 						ModeloUsuarios::mdlActualizarUsuario(
 							$tabla,
@@ -600,6 +639,40 @@ class ControladorUsuarios{
 				return;
 			}
 
+			$nombrePerfil = trim((string) $_POST["editarNombre"]);
+			$emailPerfil = strtolower(trim((string) $_POST["editarEmail"]));
+			$passwordPerfil = (string) ($_POST["editarPassword"] ?? "");
+
+			if(
+				preg_match("/^[\\p{L} .'-]{2,100}$/u", $nombrePerfil) !== 1 ||
+				filter_var($emailPerfil, FILTER_VALIDATE_EMAIL) === false ||
+				($passwordPerfil !== "" && (strlen($passwordPerfil) < 8 || strlen($passwordPerfil) > 72))
+			){
+				echo '<script>
+					swal({
+						title: "ERROR",
+						text: "Revise nombre, email y contraseña. La contraseña nueva debe tener entre 8 y 72 caracteres.",
+						type: "error",
+						confirmButtonText: "Cerrar"
+					});
+				</script>';
+				return;
+			}
+
+			$otroUsuario = ModeloUsuarios::mdlMostrarUsuario($tabla, "email", $emailPerfil);
+
+			if($otroUsuario && (int) $otroUsuario["id"] !== $idUsuario){
+				echo '<script>
+					swal({
+						title: "ERROR",
+						text: "Ese correo electrónico ya pertenece a otra cuenta.",
+						type: "error",
+						confirmButtonText: "Cerrar"
+					});
+				</script>';
+				return;
+			}
+
 			/*=============================================
 			VALIDAR IMAGEN
 			=============================================*/
@@ -736,18 +809,18 @@ class ControladorUsuarios{
 
 			}
 
-			if($_POST["editarPassword"] == ""){
+			if($passwordPerfil === ""){
 
 				$password = $usuarioActual["password"];
 
 			}else{
 
-				$password = password_hash($_POST["editarPassword"], PASSWORD_DEFAULT);
+				$password = password_hash($passwordPerfil, PASSWORD_DEFAULT);
 
 			}
 
-			$datos = array("nombre" => $_POST["editarNombre"],
-						   "email" => $_POST["editarEmail"],
+			$datos = array("nombre" => $nombrePerfil,
+						   "email" => $emailPerfil,
 						   "password" => $password,
 						   "foto" => $ruta,
 						   "id" => $idUsuario);
