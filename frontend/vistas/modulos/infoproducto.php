@@ -71,7 +71,7 @@ INFOPRODUCTOS
 								for($i = 0; $i < count($multimedia); $i ++){
 
 									echo '<li>
-								     	<img value="'.($i+1).'" class="img-thumbnail" src="'.$servidor.$multimedia[$i]["foto"].'" alt="'.$infoproducto["titulo"].'">
+								     	<img value="'.($i+1).'" class="img-thumbnail" src="'.$servidor.$multimedia[$i]["foto"].'" alt="'.Seguridad::e($infoproducto["titulo"]).'">
 								    </li>';
 
 								}
@@ -185,7 +185,7 @@ INFOPRODUCTOS
 
 						<button class="btn btn-default backColor quitarItemCarrito" idProducto="'.$infoproducto["id"].'" peso="'.$infoproducto["peso"].'"></button>
 
-						<p class="tituloCarritoCompra text-left">'.$infoproducto["titulo"].'</p>';
+						<p class="tituloCarritoCompra text-left">'.Seguridad::e($infoproducto["titulo"]).'</p>';
 
 						if($infoproducto["oferta"] == 0){
 
@@ -230,11 +230,11 @@ INFOPRODUCTOS
 
 						if($infoproducto["nuevo"] == 0){
 
-							echo '<h1 class="text-muted text-uppercase">'.$infoproducto["titulo"].'</h1>';
+							echo '<h1 class="text-muted text-uppercase">'.Seguridad::e($infoproducto["titulo"]).'</h1>';
 
 						}else{
 
-							echo '<h1 class="text-muted text-uppercase">'.$infoproducto["titulo"].'
+							echo '<h1 class="text-muted text-uppercase">'.Seguridad::e($infoproducto["titulo"]).'
 
 							<br>
 
@@ -252,7 +252,7 @@ INFOPRODUCTOS
 
 						if($infoproducto["nuevo"] == 0){
 
-							echo '<h1 class="text-muted text-uppercase">'.$infoproducto["titulo"].'
+							echo '<h1 class="text-muted text-uppercase">'.Seguridad::e($infoproducto["titulo"]).'
 
 							<br>
 
@@ -266,7 +266,7 @@ INFOPRODUCTOS
 
 						}else{
 
-							echo '<h1 class="text-muted text-uppercase">'.$infoproducto["titulo"].'
+							echo '<h1 class="text-muted text-uppercase">'.Seguridad::e($infoproducto["titulo"]).'
 
 							<br>
 
@@ -643,7 +643,7 @@ INFOPRODUCTOS
 
 								<div class="col-md-6 col-xs-12">
 									
-									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.$infoproducto["titulo"].'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
+									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.Seguridad::e($infoproducto["titulo"]).'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
 
 									<small>ADICIONAR AL CARRITO</small> 
 
@@ -656,7 +656,7 @@ INFOPRODUCTOS
 
 							echo '<div class="col-lg-6 col-md-8 col-xs-12">
 									
-									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.$infoproducto["titulo"].'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
+									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.Seguridad::e($infoproducto["titulo"]).'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
 
 									ADICIONAR AL CARRITO 
 
@@ -883,7 +883,7 @@ INFOPRODUCTOS
 				      
 				      <div class="panel-heading text-uppercase">
 
-				      	'.$usuario["nombre"].'
+				      	'.Seguridad::e($usuario["nombre"]).'
 				      	<span class="text-right">';
 
 				      	if($usuario["modo"] == "directo"){
@@ -908,7 +908,7 @@ INFOPRODUCTOS
 
 				      </div>
 				     
-				      <div class="panel-body"><small>'.$value["comentario"].'</small></div>
+				      <div class="panel-body"><small>'.Seguridad::e($value["comentario"]).'</small></div>
 
 				      <div class="panel-footer">';
 				      	
