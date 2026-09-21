@@ -1,0 +1,22 @@
+# Entorno local
+.env
+.env.*
+!.env.example
+
+# Secretos / credenciales
+**/client_secret.json
+**/*secret*.json
+**/*credentials*.json
+
+# Logs
+*.log
+logs/
+
+# Composer
+vendor/
+
+# Sistema / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
