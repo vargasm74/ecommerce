@@ -552,8 +552,7 @@ SECCIÓN PERFIL
 								
 							<?php
 
-							echo '<input type="hidden" value="'.Seguridad::e($_SESSION["foto"]).'" name="fotoUsuario" id="fotoUsuario">
-							      <input type="hidden" value="'.Seguridad::e($_SESSION["modo"]).'" name="modoUsuario" id="modoUsuario">';
+							echo '<input type="hidden" value="'.Seguridad::e($_SESSION["modo"]).'" name="modoUsuario" id="modoUsuario">';
 
 
 							if($_SESSION["modo"] == "directo"){
@@ -664,7 +663,7 @@ SECCIÓN PERFIL
 								<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-										<input type="text" class="form-control" id="editarEmail" name="editarEmail" value="'.Seguridad::e($_SESSION["email"]).'">
+										<input type="email" class="form-control" id="editarEmail" name="editarEmail" value="'.Seguridad::e($_SESSION["email"]).'" required>
 
 									</div>
 
@@ -675,7 +674,7 @@ SECCIÓN PERFIL
 								<div class="input-group">
 								
 										<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-										<input type="text" class="form-control" id="editarPassword" name="editarPassword" placeholder="Escribe la nueva contraseña">
+										<input type="password" class="form-control" id="editarPassword" name="editarPassword" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Nueva contraseña (mínimo 8 caracteres)">
 
 									</div>
 
