@@ -646,21 +646,51 @@ INFOPRODUCTOS
 
 				<?php
 
-					if($infoproducto["precio"]==0){
+					$precioCompra = $infoproducto["oferta"] != 0 && (float)$infoproducto["precioOferta"] > 0
+						? $infoproducto["precioOferta"]
+						: $infoproducto["precio"];
+
+					$enDeseos = false;
+
+					if(isset($_SESSION["id"])){
+
+						$deseosUsuario = ControladorUsuarios::ctrMostrarDeseos((int) $_SESSION["id"]);
+
+						foreach(($deseosUsuario ?: array()) as $deseoUsuario){
+
+							if((int) $deseoUsuario["id_producto"] === (int) $infoproducto["id"]){
+								$enDeseos = true;
+								break;
+							}
+						}
+					}
+
+					if((float)$precioCompra == 0.0){
 
 						echo '<div class="col-md-6 col-xs-12">';
 
-							if($infoproducto["tipo"]=="virtual"){
-						
-								echo '<button class="btn btn-default btn-block btn-lg backColor">ACCEDER AHORA</button>';
+						if($infoproducto["tipo"]=="virtual"){
 
-							}else{
+							echo '<button
+								class="btn btn-default btn-block btn-lg backColor agregarGratis"
+								idProducto="'.$infoproducto["id"].'"
+								tipo="'.Seguridad::e($infoproducto["tipo"]).'"
+								titulo="'.Seguridad::e($infoproducto["titulo"]).'">
+								ACCEDER AHORA
+							</button>';
 
-								echo '<button class="btn btn-default btn-block btn-lg backColor">SOLICITAR AHORA</button>';
+						}else{
 
-							}
+							echo '<button
+								class="btn btn-default btn-block btn-lg backColor agregarGratis"
+								idProducto="'.$infoproducto["id"].'"
+								tipo="'.Seguridad::e($infoproducto["tipo"]).'"
+								titulo="'.Seguridad::e($infoproducto["titulo"]).'">
+								SOLICITAR AHORA
+							</button>';
+						}
 
-							echo '</div>';
+						echo '</div>';
 
 					}else{
 
@@ -668,52 +698,63 @@ INFOPRODUCTOS
 
 							echo '<div class="col-md-6 col-xs-12">';
 
-							if(isset($_SESSION["validarSesion"])){
+							if(isset($_SESSION["validarSesion"]) && $_SESSION["validarSesion"] == "ok"){
 
-								if($_SESSION["validarSesion"] == "ok"){
-
-									echo '<a id="btnCheckout" href="#modalComprarAhora" data-toggle="modal" idUsuario="'.$_SESSION["id"].'"><button class="btn btn-default btn-block btn-lg">
-									<small>COMPRAR AHORA</small></button></a>';
-
-								}
+								echo '<a id="btnCheckout" href="#modalComprarAhora" data-toggle="modal">
+									<button class="btn btn-default btn-block btn-lg">
+										<small>COMPRAR AHORA</small>
+									</button>
+								</a>';
 
 							}else{
 
-								echo '<a href="#modalIngreso" data-toggle="modal"><button class="btn btn-default btn-block btn-lg">
-									<small>COMPRAR AHORA</small></button></a>';
-			
+								echo '<a href="#modalIngreso" data-toggle="modal">
+									<button class="btn btn-default btn-block btn-lg">
+										<small>COMPRAR AHORA</small>
+									</button>
+								</a>';
 							}
 
 							echo '</div>
 
-								<div class="col-md-6 col-xs-12">
-									
-									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.Seguridad::e($infoproducto["titulo"]).'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
-
-									<small>ADICIONAR AL CARRITO</small> 
-
+							<div class="col-md-6 col-xs-12">
+								<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"
+									idProducto="'.$infoproducto["id"].'"
+									imagen="'.Seguridad::e($servidor.$infoproducto["portada"]).'"
+									titulo="'.Seguridad::e($infoproducto["titulo"]).'"
+									precio="'.$precioCompra.'"
+									tipo="'.Seguridad::e($infoproducto["tipo"]).'"
+									peso="'.$infoproducto["peso"].'">
+									<small>ADICIONAR AL CARRITO</small>
 									<i class="fa fa-shopping-cart col-md-0"></i>
+								</button>
+							</div>';
 
-									</button>
-
-								</div>';
 						}else{
 
 							echo '<div class="col-lg-6 col-md-8 col-xs-12">
-									
-									<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"  idProducto="'.$infoproducto["id"].'" imagen="'.$servidor.$infoproducto["portada"].'" titulo="'.Seguridad::e($infoproducto["titulo"]).'" precio="'.$infoproducto["precio"].'" tipo="'.$infoproducto["tipo"].'" peso="'.$infoproducto["peso"].'">
-
-									ADICIONAR AL CARRITO 
-
+								<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"
+									idProducto="'.$infoproducto["id"].'"
+									imagen="'.Seguridad::e($servidor.$infoproducto["portada"]).'"
+									titulo="'.Seguridad::e($infoproducto["titulo"]).'"
+									precio="'.$precioCompra.'"
+									tipo="'.Seguridad::e($infoproducto["tipo"]).'"
+									peso="'.$infoproducto["peso"].'">
+									ADICIONAR AL CARRITO
 									<i class="fa fa-shopping-cart"></i>
-
-									</button>
-
-								</div>';
-
+								</button>
+							</div>';
 						}
-
 					}
+
+					echo '<div class="col-xs-12" style="margin-top:10px">
+						<button
+							type="button"
+							class="btn btn-default btn-block btn-lg deseos detalleDeseo '.($enDeseos ? 'btn-danger' : '').'"
+							idProducto="'.$infoproducto["id"].'">
+							<i class="fa fa-heart"></i> '.($enDeseos ? 'EN MI LISTA DE DESEOS' : 'GUARDAR EN DESEOS').'
+						</button>
+					</div>';
 
 				?>
 
