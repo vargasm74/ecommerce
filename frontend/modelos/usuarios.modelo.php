@@ -248,9 +248,10 @@ class ModeloUsuarios{
 
 	static public function mdlQuitarDeseo($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id AND id_usuario = :id_usuario");
 
-		$stmt -> bindParam(":id", $datos, PDO::PARAM_INT);
+		$stmt -> bindParam(":id", $datos["idDeseo"], PDO::PARAM_INT);
+		$stmt -> bindParam(":id_usuario", $datos["idUsuario"], PDO::PARAM_INT);
 
 		if($stmt -> execute()){
 
