@@ -148,3 +148,19 @@ if(isset($_POST["idDeseo"])){
 	$quitarDeseo -> idDeseo = $_POST["idDeseo"];
 	$quitarDeseo ->ajaxQuitarDeseo();
 }
+
+
+/*=============================================
+ELIMINAR CUENTA
+=============================================*/
+
+if(isset($_POST["eliminarCuenta"])){
+
+	$respuesta = ControladorUsuarios::ctrEliminarUsuario();
+
+	if($respuesta === "unauthorized"){
+		http_response_code(401);
+	}
+
+	echo $respuesta;
+}
