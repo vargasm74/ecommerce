@@ -191,6 +191,12 @@ LISTAR PRODUCTOS
 				$valor2 = null;
 				$ordenar = "vistas";
 
+			}else if($rutas[0] == "ofertas"){
+
+				$item2 = "oferta";
+				$valor2 = 1;
+				$ordenar = "id";
+
 			}else{
 
 				$ordenar = "id";
