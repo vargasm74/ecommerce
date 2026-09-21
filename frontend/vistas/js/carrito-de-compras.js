@@ -624,7 +624,7 @@ function actualizarResumenCheckout(pais, alFinalizar){
 				.text(respuesta.envio)
 				.attr("valor", respuesta.envio);
 
-			$(".porcentajeImpuesto").text(respuesta.impuesto_porcentaje);
+			$(".reglaImpuesto").text(respuesta.impuesto_descripcion);
 
 			$(".valorTotalImpuesto")
 				.text(respuesta.impuesto)
