@@ -386,53 +386,92 @@ function validarComentario(){
 LISTA DE DESEOS
 =============================================*/
 
-$(".deseos").click(function(){
+$(document).on("click", ".deseos", function(){
 
-	var idProducto = $(this).attr("idProducto");
-	console.log("idProducto", idProducto);
+	var boton = $(this);
+	var idProducto = Number(boton.attr("idProducto"));
 
-	var idUsuario = localStorage.getItem("usuario");
-	console.log("idUsuario", idUsuario);
-
-	if(idUsuario == null){
-
-		swal({
-		  title: "Debe ingresar al sistema",
-		  text: "¡Para agregar un producto a la 'lista de deseos' debe primero ingresar al sistema!",
-		  type: "warning",
-		  confirmButtonText: "¡Cerrar!",
-		  closeOnConfirm: false
-		},
-		function(isConfirm){
-				 if (isConfirm) {	   
-				    window.location = rutaOculta;
-				  } 
-		});
-
-	}else{
-
-		$(this).addClass("btn-danger");
-
-		var datos = new FormData();
-		datos.append("idProducto", idProducto);
-
-		$.ajax({
-			url:rutaOculta+"ajax/usuarios.ajax.php",
-			method:"POST",
-			data: datos,
-			cache: false,
-			contentType: false,
-			processData: false,
-			success:function(respuesta){
-				
-							
-			}
-
-		})
-
+	if(!Number.isInteger(idProducto) || idProducto <= 0){
+		return;
 	}
 
+	boton.prop("disabled", true);
+
+	var datos = new FormData();
+	datos.append("idProducto", idProducto);
+
+	$.ajax({
+		url:rutaOculta+"ajax/usuarios.ajax.php",
+		method:"POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success:function(respuesta){
+
+			respuesta = $.trim(respuesta);
+
+			if(respuesta === "ok" || respuesta === "existe"){
+
+				boton.addClass("btn-danger");
+
+				if(boton.hasClass("detalleDeseo")){
+					boton.html('<i class="fa fa-heart"></i> EN MI LISTA DE DESEOS');
+				}
+
+				if(respuesta === "ok"){
+					swal({
+						title: "Guardado",
+						text: "El producto fue agregado a tu lista de deseos.",
+						type: "success",
+						confirmButtonText: "Cerrar"
+					});
+				}
+
+			}else{
+
+				swal({
+					title: "No se pudo guardar",
+						text: "Intente nuevamente.",
+						type: "error",
+						confirmButtonText: "Cerrar"
+					});
+			}
+
+		},
+		error:function(xhr){
+
+			if(xhr.status === 401){
+
+				localStorage.setItem("rutaActual", window.location.href);
+
+				swal({
+					title: "Debe ingresar al sistema",
+					text: "Inicie sesión para guardar productos en su lista de deseos.",
+					type: "warning",
+					confirmButtonText: "Ingresar"
+				}, function(){
+					$("#modalIngreso").modal("show");
+				});
+
+			}else{
+
+				swal({
+					title: "Error",
+					text: "No se pudo actualizar la lista de deseos.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+			}
+
+		},
+		complete:function(){
+			boton.prop("disabled", false);
+		}
+	});
+
 })
+
 
 /*=============================================
 BORRAR PRODUCTO DE LISTA DE DESEOS
