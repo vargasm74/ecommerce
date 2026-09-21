@@ -652,74 +652,114 @@ class ControladorUsuarios{
 
 			$ruta = $usuarioActual["foto"];
 
-			if(isset($_FILES["datosImagen"]["tmp_name"]) && !empty($_FILES["datosImagen"]["tmp_name"])){
+			if(isset($_FILES["datosImagen"]) && $_FILES["datosImagen"]["error"] !== UPLOAD_ERR_NO_FILE){
 
-				/*=============================================
-				PRIMERO PREGUNTAMOS SI EXISTE OTRA IMAGEN EN LA BD
-				=============================================*/
+				$archivo = $_FILES["datosImagen"];
 
-				$directorio = "vistas/img/usuarios/".$idUsuario;
-
-				if(!empty($_POST["fotoUsuario"])){
-
-					unlink($_POST["fotoUsuario"]);
-				
-				}else{
-
-					mkdir($directorio, 0755);
-
+				if($archivo["error"] !== UPLOAD_ERR_OK){
+					throw new RuntimeException("Error al recibir la imagen");
 				}
 
-				/*=============================================
-				GUARDAMOS LA IMAGEN EN EL DIRECTORIO
-				=============================================*/
+				$tamanoMaximo = 5 * 1024 * 1024;
 
-				list($ancho, $alto) = getimagesize($_FILES["datosImagen"]["tmp_name"]);
+				if($archivo["size"] <= 0 || $archivo["size"] > $tamanoMaximo){
+					throw new RuntimeException("La imagen supera el tamaño permitido");
+				}
+
+				if(!is_uploaded_file($archivo["tmp_name"])){
+					throw new RuntimeException("El archivo recibido no es un upload valido");
+				}
+
+				$finfo = new finfo(FILEINFO_MIME_TYPE);
+				$mimeReal = $finfo->file($archivo["tmp_name"]);
+
+				$tiposPermitidos = array(
+					"image/jpeg" => "jpg",
+					"image/png" => "png"
+				);
+
+				if(!isset($tiposPermitidos[$mimeReal])){
+					throw new RuntimeException("Tipo de imagen no permitido");
+				}
+
+				$dimensiones = @getimagesize($archivo["tmp_name"]);
+
+				if($dimensiones === false){
+					throw new RuntimeException("El archivo no es una imagen valida");
+				}
+
+				$ancho = (int) $dimensiones[0];
+				$alto = (int) $dimensiones[1];
+
+				if($ancho < 1 || $alto < 1 || $ancho > 5000 || $alto > 5000){
+					throw new RuntimeException("Dimensiones de imagen no permitidas");
+				}
+
+				$directorioRelativo = "vistas/img/usuarios/".$idUsuario;
+				$directorioAbsoluto = dirname(__DIR__)."/".$directorioRelativo;
+
+				if(!is_dir($directorioAbsoluto) && !mkdir($directorioAbsoluto, 0755, true)){
+					throw new RuntimeException("No se pudo crear el directorio de imagenes");
+				}
+
+				$extension = $tiposPermitidos[$mimeReal];
+				$nombreSeguro = bin2hex(random_bytes(16)).".".$extension;
+				$rutaNueva = $directorioRelativo."/".$nombreSeguro;
+				$rutaNuevaAbsoluta = $directorioAbsoluto."/".$nombreSeguro;
+
+				$origen = $mimeReal === "image/jpeg"
+					? @imagecreatefromjpeg($archivo["tmp_name"])
+					: @imagecreatefrompng($archivo["tmp_name"]);
+
+				if($origen === false){
+					throw new RuntimeException("No se pudo procesar la imagen");
+				}
 
 				$nuevoAncho = 500;
-				$nuevoAlto = 500;	
+				$nuevoAlto = 500;
+				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
 
-				$aleatorio = mt_rand(100, 999);
+				if($mimeReal === "image/png"){
+					imagealphablending($destino, false);
+					imagesavealpha($destino, true);
+				}
 
-				if($_FILES["datosImagen"]["type"] == "image/jpeg"){
+				imagecopyresampled(
+					$destino,
+					$origen,
+					0,
+					0,
+					0,
+					0,
+					$nuevoAncho,
+					$nuevoAlto,
+					$ancho,
+					$alto
+				);
 
-					$ruta = "vistas/img/usuarios/".$idUsuario."/".$aleatorio.".jpg";
+				$guardada = $mimeReal === "image/jpeg"
+					? imagejpeg($destino, $rutaNuevaAbsoluta, 85)
+					: imagepng($destino, $rutaNuevaAbsoluta);
 
-					/*=============================================
-					MOFICAMOS TAMAÑO DE LA FOTO
-					=============================================*/
+				imagedestroy($origen);
+				imagedestroy($destino);
 
-					$origen = imagecreatefromjpeg($_FILES["datosImagen"]["tmp_name"]);
+				if(!$guardada){
+					throw new RuntimeException("No se pudo guardar la imagen");
+				}
 
-					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+				if(!empty($usuarioActual["foto"])){
 
-					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+					$fotoAnterior = basename($usuarioActual["foto"]);
+					$rutaAnteriorAbsoluta = $directorioAbsoluto."/".$fotoAnterior;
 
-					imagejpeg($destino, $ruta);
+					if(is_file($rutaAnteriorAbsoluta)){
+						@unlink($rutaAnteriorAbsoluta);
+					}
 
 				}
 
-				if($_FILES["datosImagen"]["type"] == "image/png"){
-
-					$ruta = "vistas/img/usuarios/".$idUsuario."/".$aleatorio.".png";
-
-					/*=============================================
-					MOFICAMOS TAMAÑO DE LA FOTO
-					=============================================*/
-
-					$origen = imagecreatefrompng($_FILES["datosImagen"]["tmp_name"]);
-
-					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-					imagealphablending($destino, FALSE);
-    			
-					imagesavealpha($destino, TRUE);
-
-					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-					imagepng($destino, $ruta);
-
-				}
+				$ruta = $rutaNueva;
 
 			}
 
