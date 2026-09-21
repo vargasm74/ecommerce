@@ -38,6 +38,8 @@ if(session_status() !== PHP_SESSION_ACTIVE){
 
 	<title>Tienda Virtual</title>
 
+	<meta name="csrf-token" content="<?php echo htmlspecialchars(Seguridad::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
+
 	<?php
 
 
@@ -94,6 +96,20 @@ if(session_status() !== PHP_SESSION_ACTIVE){
 	======================================-->
 
 	<script src="<?php echo $url; ?>vistas/js/plugins/jquery.min.js"></script>
+
+	<script>
+	(function($){
+		var meta = document.querySelector('meta[name="csrf-token"]');
+
+		if(meta){
+			$.ajaxSetup({
+				headers: {
+					"X-CSRF-Token": meta.getAttribute("content")
+				}
+			});
+		}
+	})(jQuery);
+	</script>
 
 	<script src="<?php echo $url; ?>vistas/js/plugins/bootstrap.min.js"></script>
 
