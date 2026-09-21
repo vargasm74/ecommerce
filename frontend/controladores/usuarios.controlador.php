@@ -641,6 +641,7 @@ class ControladorUsuarios{
 
 			$nombrePerfil = trim((string) $_POST["editarNombre"]);
 			$emailPerfil = strtolower(trim((string) $_POST["editarEmail"]));
+			$passwordActual = (string) ($_POST["passwordActual"] ?? "");
 			$passwordPerfil = (string) ($_POST["editarPassword"] ?? "");
 
 			if(
@@ -657,6 +658,24 @@ class ControladorUsuarios{
 					});
 				</script>';
 				return;
+			}
+
+			if($passwordPerfil !== ""){
+
+				if($passwordActual === "" || !password_verify($passwordActual, $usuarioActual["password"])){
+
+					echo '<script>
+						swal({
+							title: "ERROR",
+							text: "La contraseña actual no coincide. No se realizó el cambio.",
+							type: "error",
+							confirmButtonText: "Cerrar"
+						});
+					</script>';
+
+					return;
+				}
+
 			}
 
 			$otroUsuario = ModeloUsuarios::mdlMostrarUsuario($tabla, "email", $emailPerfil);
