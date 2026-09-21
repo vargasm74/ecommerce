@@ -28,9 +28,16 @@ VISUALIZAR LOS PRODUCTOS EN LA PÁGINA CARRITO DE COMPRAS
 =============================================*/
 
 
+var listaCarrito = [];
+
 if(localStorage.getItem("listaProductos") != null){
 
-	var listaCarrito = JSON.parse(localStorage.getItem("listaProductos"));
+	try{
+		listaCarrito = JSON.parse(localStorage.getItem("listaProductos")) || [];
+	}catch(e){
+		listaCarrito = [];
+		localStorage.removeItem("listaProductos");
+	}
 
 }else{
 
@@ -75,7 +82,7 @@ for(var i = 0; i < indice.length; i++){
 
 					$(".cuerpoCarrito").append(
 
-						'<div clas="row itemCarrito">'+
+						'<div class="row itemCarrito">'+
 							
 							'<div class="col-sm-1 col-xs-12">'+
 								
