@@ -4,6 +4,26 @@ require_once "conexion.php";
 
 class ModeloProductos{
 
+	private static function normalizarOrden($ordenar){
+		$permitidos = array("id", "ventas", "vistas", "vistasGratis", "precio", "precioOferta", "titulo");
+
+		return in_array($ordenar, $permitidos, true) ? $ordenar : "id";
+	}
+
+	private static function normalizarModo($modo){
+		$modo = strtoupper((string) $modo);
+
+		return in_array($modo, array("ASC", "DESC"), true) ? $modo : "DESC";
+	}
+
+	private static function normalizarLimite($valor, $porDefecto){
+		$valor = filter_var($valor, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 0)
+		));
+
+		return $valor === false ? $porDefecto : $valor;
+	}
+
 	/*=============================================
 	MOSTRAR CATEGORÍAS
 	=============================================*/
@@ -62,9 +82,20 @@ class ModeloProductos{
 
 	static public function mdlMostrarProductos($tabla, $ordenar, $item, $valor, $base, $tope, $modo){
 
+		$ordenar = self::normalizarOrden($ordenar);
+		$base = self::normalizarLimite($base, 0);
+		$tope = self::normalizarLimite($tope, 12);
+
+		if($modo === "Rand()"){
+			$clausulaOrden = "RAND()";
+		}else{
+			$modo = self::normalizarModo($modo);
+			$clausulaOrden = "$ordenar $modo";
+		}
+
 		if($item != null){
 
-			$stmt = Conexion::conectar()->prepare("SELECT *FROM $tabla WHERE $item = :$item ORDER BY $ordenar $modo LIMIT $base, $tope");
+			$stmt = Conexion::conectar()->prepare("SELECT *FROM $tabla WHERE $item = :$item ORDER BY $clausulaOrden LIMIT $base, $tope");
 
 			$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
 
@@ -74,7 +105,7 @@ class ModeloProductos{
 
 		}else{
 
-			$stmt = Conexion::conectar()->prepare("SELECT *FROM $tabla ORDER BY $ordenar $modo LIMIT $base, $tope");
+			$stmt = Conexion::conectar()->prepare("SELECT *FROM $tabla ORDER BY $clausulaOrden LIMIT $base, $tope");
 
 			$stmt -> execute();
 
@@ -114,6 +145,8 @@ class ModeloProductos{
 	=============================================*/
 
 	static public function mdlListarProductos($tabla, $ordenar, $item, $valor){
+
+		$ordenar = self::normalizarOrden($ordenar);
 
 		if($item != null){
 
@@ -166,15 +199,18 @@ class ModeloProductos{
 
 	static public function mdlBuscarProductos($tabla, $busqueda, $ordenar, $modo, $base, $tope){
 
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE ruta like '%$busqueda%' OR titulo like '%$busqueda%' OR titular like '%$busqueda%' OR descripcion like '%$busqueda%' ORDER BY $ordenar $modo LIMIT $base, $tope");
+		$ordenar = self::normalizarOrden($ordenar);
+		$modo = self::normalizarModo($modo);
+		$base = self::normalizarLimite($base, 0);
+		$tope = self::normalizarLimite($tope, 12);
+		$termino = "%".$busqueda."%";
 
+		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE ruta LIKE :busqueda OR titulo LIKE :busqueda OR titular LIKE :busqueda OR descripcion LIKE :busqueda ORDER BY $ordenar $modo LIMIT $base, $tope");
+
+		$stmt -> bindParam(":busqueda", $termino, PDO::PARAM_STR);
 		$stmt -> execute();
 
 		return $stmt -> fetchAll();
-
-		$stmt -> close();
-
-		$stmt = null;
 
 	}
 
@@ -184,15 +220,14 @@ class ModeloProductos{
 
 	static public function mdlListarProductosBusqueda($tabla, $busqueda){
 
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE ruta like '%$busqueda%' OR titulo like '%$busqueda%' OR titular like '%$busqueda%' OR descripcion like '%$busqueda%'");
+		$termino = "%".$busqueda."%";
 
+		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE ruta LIKE :busqueda OR titulo LIKE :busqueda OR titular LIKE :busqueda OR descripcion LIKE :busqueda");
+
+		$stmt -> bindParam(":busqueda", $termino, PDO::PARAM_STR);
 		$stmt -> execute();
 
 		return $stmt -> fetchAll();
-
-		$stmt -> close();
-
-		$stmt = null;
 
 	}
 
