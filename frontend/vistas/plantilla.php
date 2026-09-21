@@ -132,7 +132,7 @@ if(isset($_GET["ruta"])){
 
 	$rutaCategorias = ControladorProductos::ctrMostrarCategorias($item, $valor);
 
-	if($rutas[0] == $rutaCategorias["ruta"]){
+	if(is_array($rutaCategorias) && isset($rutaCategorias["ruta"]) && $rutas[0] === $rutaCategorias["ruta"]){
 
 		$ruta = $rutas[0];
 
@@ -144,7 +144,7 @@ if(isset($_GET["ruta"])){
 
 	$rutaSubCategorias = ControladorProductos::ctrMostrarSubCategorias($item, $valor);
 
-	foreach ($rutaSubCategorias as $key => $value) {
+	foreach (($rutaSubCategorias ?: array()) as $key => $value) {
 		
 		if($rutas[0] == $value["ruta"]){
 
@@ -160,7 +160,7 @@ if(isset($_GET["ruta"])){
 
 	$rutaProductos = ControladorProductos::ctrMostrarInfoProducto($item, $valor);
 	
-	if($rutas[0] == $rutaProductos["ruta"]){
+	if(is_array($rutaProductos) && isset($rutaProductos["ruta"]) && $rutas[0] === $rutaProductos["ruta"]){
 
 		$infoProducto = $rutas[0];
 
