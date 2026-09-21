@@ -11,7 +11,7 @@ class ControladorUsuarios{
 		if(isset($_POST["regUsuario"])){
 
 			$nombre = trim((string) $_POST["regUsuario"]);
-			$email = strtolower(trim((string) $email));
+			$email = strtolower(trim((string) $_POST["regEmail"]));
 			$passwordPlano = (string) $_POST["regPassword"];
 
 			$nombreValido = preg_match("/^[\\p{L} .'-]{2,100}$/u", $nombre) === 1;
@@ -183,7 +183,7 @@ class ControladorUsuarios{
 
 						swal({
 							  title: "¡ERROR!",
-							  text: "¡Error al registrar el usuario, no se permiten caracteres especiales!",
+							  text: "Revise nombre, email y contraseña. La contraseña debe tener entre 8 y 72 caracteres.",
 							  type:"error",
 							  confirmButtonText: "Cerrar",
 							  closeOnConfirm: false
