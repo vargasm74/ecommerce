@@ -85,3 +85,22 @@ docker compose up -d --build
 ## Nota sobre el dump legado
 
 El dump original es de MariaDB/PHP antiguos y contiene fechas cero. El propio archivo configura su sesión SQL de importación antes de insertar los datos. MySQL vuelve a usar su modo normal para las conexiones posteriores.
+
+
+## Login con Microsoft (Hotmail / Outlook)
+
+La integración queda deshabilitada por defecto.
+
+Para desarrollo local, registrar en Microsoft Entra una aplicación web y usar exactamente este Redirect URI:
+
+```text
+http://localhost:8080/frontend/microsoft-callback.php
+```
+
+Después completar en el archivo local `.env` las variables `MICROSOFT_OAUTH_ENABLED`, `MICROSOFT_TENANT`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` y `MICROSOFT_REDIRECT_URI`.
+
+El secreto nunca debe subirse al repositorio. Tras cambiar variables de entorno:
+
+```powershell
+docker compose up -d --force-recreate app
+```
