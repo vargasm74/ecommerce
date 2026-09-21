@@ -2,16 +2,32 @@
 VIDEO DE PRODUCTO CON FALLBACK
 =============================================*/
 
+var videoProductoListo = false;
+var temporizadorVideoProducto = null;
+
 function mostrarFallbackVideo(){
 
-	$(".mediaProductoVirtual .youtubePlayer").hide();
+	$(".mediaProductoVirtual .youtubePlayerWrapper").css("visibility", "hidden");
 	$(".mediaProductoVirtual .videoFallback").show();
+
+}
+
+function mostrarVideoProducto(){
+
+	videoProductoListo = true;
+
+	if(temporizadorVideoProducto){
+		clearTimeout(temporizadorVideoProducto);
+	}
+
+	$(".mediaProductoVirtual .videoFallback").hide();
+	$(".mediaProductoVirtual .youtubePlayerWrapper").css("visibility", "visible");
 
 }
 
 function inicializarVideoProducto(){
 
-	var contenedor = document.querySelector(".youtubePlayer");
+	var contenedor = document.getElementById("youtubePlayerProducto");
 
 	if(!contenedor || typeof YT === "undefined" || typeof YT.Player === "undefined"){
 		return;
@@ -19,7 +35,7 @@ function inicializarVideoProducto(){
 
 	var videoId = contenedor.getAttribute("data-video-id");
 
-	new YT.Player(contenedor, {
+	new YT.Player("youtubePlayerProducto", {
 		width: "100%",
 		height: "100%",
 		videoId: videoId,
@@ -29,6 +45,9 @@ function inicializarVideoProducto(){
 			origin: window.location.origin
 		},
 		events: {
+			onReady: function(){
+				mostrarVideoProducto();
+			},
 			onError: function(){
 				mostrarFallbackVideo();
 			}
@@ -37,9 +56,17 @@ function inicializarVideoProducto(){
 
 }
 
-if(document.querySelector(".youtubePlayer")){
+if(document.getElementById("youtubePlayerProducto")){
 
 	window.onYouTubeIframeAPIReady = inicializarVideoProducto;
+
+	temporizadorVideoProducto = setTimeout(function(){
+
+		if(!videoProductoListo){
+			mostrarFallbackVideo();
+		}
+
+	}, 8000);
 
 	var youtubeApi = document.createElement("script");
 	youtubeApi.src = "https://www.youtube.com/iframe_api";
