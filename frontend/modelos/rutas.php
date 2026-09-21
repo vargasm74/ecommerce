@@ -1,25 +1,18 @@
 <?php
 
-class Ruta{
+class Ruta
+{
+    public static function ctrRuta(): string
+    {
+        $url = getenv('APP_URL') ?: 'http://localhost/frontend/';
 
-	/*=============================================
-	RUTA LADO DEL CLIENTE
-	=============================================*/	
+        return rtrim($url, '/') . '/';
+    }
 
-	public function ctrRuta(){
+    public static function ctrRutaServidor(): string
+    {
+        $url = getenv('BACKEND_URL') ?: 'http://localhost/backend/';
 
-		return "http://localhost/frontend/";
-	
-	}
-
-	/*=============================================
-	RUTA LADO DEL SERVIDOR
-	=============================================*/	
-
-	public function ctrRutaServidor(){
-
-		return "http://localhost/backend/";
-	
-	}
-
+        return rtrim($url, '/') . '/';
+    }
 }
