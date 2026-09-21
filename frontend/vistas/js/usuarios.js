@@ -106,7 +106,7 @@ function registroUsuario(){
 
 	if(email != ""){
 
-		var expresion = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/;
+		var expresion = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 		if(!expresion.test(email)){
 
@@ -140,11 +140,9 @@ function registroUsuario(){
 
 	if(password != ""){
 
-		var expresion = /^[a-zA-Z0-9]*$/;
+		if(password.length < 8 || password.length > 72){
 
-		if(!expresion.test(password)){
-
-			$("#regPassword").parent().before('<div class="alert alert-warning"><strong>ERROR:</strong> No se permiten caracteres especiales</div>')
+			$("#regPassword").parent().before('<div class="alert alert-warning"><strong>ERROR:</strong> La contraseña debe tener entre 8 y 72 caracteres</div>')
 
 			return false;
 
@@ -212,13 +210,13 @@ $("#datosImagen").change(function(){
 
 	}
 
-	else if(Number(imagen["size"]) > 2000000){
+	else if(Number(imagen["size"]) > 5242880){
 
 		$("#datosImagen").val("");
 
 		swal({
 		  title: "Error al subir la imagen",
-		  text: "¡La imagen no debe pesar más de 2 MB!",
+		  text: "¡La imagen no debe pesar más de 5 MB!",
 		  type: "error",
 		  confirmButtonText: "¡Cerrar!",
 		  closeOnConfirm: false
