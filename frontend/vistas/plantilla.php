@@ -214,6 +214,7 @@ JAVASCRIPT PERSONALIZADO
 <script src="<?php echo $url; ?>vistas/js/carrito-de-compras.js"></script>
 
 <?php if(!empty($facebookOauthEnabled)){ ?>
+<?php if(!empty($facebookOauthEnabled)){ ?>
 <!--=====================================
 https://developers.facebook.com/
 ======================================-->
@@ -239,6 +240,7 @@ https://developers.facebook.com/
      fjs.parentNode.insertBefore(js, fjs);
    }(document, 'script', 'facebook-jssdk'));
 </script>
+<?php } ?>
 <?php } ?>
 
 </body>
