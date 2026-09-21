@@ -595,15 +595,22 @@ function actualizarResumenCheckout(pais, alFinalizar){
 				$("<td>").addClass("valorTitulo").text(producto.titulo).appendTo(fila);
 				$("<td>").addClass("valorCantidad").text(producto.cantidad).appendTo(fila);
 
-				var celdaPrecio = $("<td>");
-				celdaPrecio.append(document.createTextNode("$"));
+				var celdaUnitario = $("<td>");
+				celdaUnitario.append(document.createTextNode("$"));
+				$("<span>")
+					.text(producto.precio_unitario)
+					.appendTo(celdaUnitario);
+				celdaUnitario.appendTo(fila);
+
+				var celdaSubtotal = $("<td>");
+				celdaSubtotal.append(document.createTextNode("$"));
 				$("<span>")
 					.addClass("valorItem")
 					.attr("valor", producto.subtotal)
 					.text(producto.subtotal)
-					.appendTo(celdaPrecio);
+					.appendTo(celdaSubtotal);
 
-				celdaPrecio.appendTo(fila);
+				celdaSubtotal.appendTo(fila);
 				fila.appendTo(tbody);
 			});
 
@@ -616,6 +623,8 @@ function actualizarResumenCheckout(pais, alFinalizar){
 			$(".valorTotalEnvio")
 				.text(respuesta.envio)
 				.attr("valor", respuesta.envio);
+
+			$(".porcentajeImpuesto").text(respuesta.impuesto_porcentaje);
 
 			$(".valorTotalImpuesto")
 				.text(respuesta.impuesto)
