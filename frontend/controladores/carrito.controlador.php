@@ -217,6 +217,38 @@ class ControladorCarrito{
 	}
 
 	/*=============================================
+	ADQUIRIR PRODUCTO GRATIS
+	=============================================*/
+
+	static public function ctrAdquirirProductoGratis($idUsuario, $idProducto, $email, $detalle){
+
+		$idUsuario = filter_var($idUsuario, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 1)
+		));
+		$idProducto = filter_var($idProducto, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 1)
+		));
+
+		if($idUsuario === false || $idProducto === false){
+			return "error";
+		}
+
+		$email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : "";
+		$detalle = trim(strip_tags((string) $detalle));
+
+		if(strlen($detalle) > 500){
+			$detalle = substr($detalle, 0, 500);
+		}
+
+		return ModeloCarrito::mdlAdquirirProductoGratis(
+			$idUsuario,
+			$idProducto,
+			$email,
+			$detalle
+		);
+	}
+
+	/*=============================================
 	NUEVAS COMPRAS
 	=============================================*/
 
