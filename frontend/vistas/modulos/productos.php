@@ -11,11 +11,11 @@ $ruta = $rutas[0];
 
 $banner = ControladorProductos::ctrMostrarBanner($ruta);
 
-$titulo1 = json_decode($banner["titulo1"],true);
-$titulo2 = json_decode($banner["titulo2"],true);
-$titulo3 = json_decode($banner["titulo3"],true);
+if(is_array($banner)){
 
-if($banner != null){
+$titulo1 = json_decode($banner["titulo1"], true) ?: array("color" => "", "texto" => "");
+$titulo2 = json_decode($banner["titulo2"], true) ?: array("color" => "", "texto" => "");
+$titulo3 = json_decode($banner["titulo3"], true) ?: array("color" => "", "texto" => "");
 
 echo '<figure class="banner">
 
@@ -203,8 +203,18 @@ LISTAR PRODUCTOS
 
 					$subCategoria = ControladorProductos::ctrMostrarSubCategorias($item1, $valor1);
 
+					if(!$subCategoria || !isset($subCategoria[0]["id"])){
+
+						echo '<div class="col-xs-12 error404 text-center">
+							<h1><small>¡Oops!</small></h1>
+							<h2>La sección solicitada no existe.</h2>
+						</div>';
+
+						return;
+					}
+
 					$item2 = "id_subcategoria";
-					$valor2 = $subCategoria[0]["id"];
+					$valor2 = (int) $subCategoria[0]["id"];
 
 				}else{
 
