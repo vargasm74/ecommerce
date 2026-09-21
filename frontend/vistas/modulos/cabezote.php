@@ -32,59 +32,69 @@ API DE GOOGLE
 CREAR EL OBJETO DE LA API GOOGLE
 =============================================*/
 
-$cliente = new Google_Client();
-$cliente->setAuthConfig('modelos/client_secret.json');
-$cliente->setAccessType("offline");
-$cliente->setScopes(['profile','email']);
+$rutaGoogle = "#";
+$cliente = null;
 
-/*=============================================
-RUTA PARA EL LOGIN DE GOOGLE
-=============================================*/
+$googleOauthEnabled = filter_var(
+    getenv("GOOGLE_OAUTH_ENABLED") ?: "false",
+    FILTER_VALIDATE_BOOLEAN
+);
 
-$rutaGoogle = $cliente->createAuthUrl();
+$googleClientId = getenv("GOOGLE_CLIENT_ID") ?: "";
+$googleClientSecret = getenv("GOOGLE_CLIENT_SECRET") ?: "";
+$googleRedirectUri = getenv("GOOGLE_REDIRECT_URI") ?: "";
 
-/*=============================================
-RECIBIMOS LA VARIABLE GET DE GOOGLE LLAMADA CODE
-=============================================*/
+if (
+    $googleOauthEnabled &&
+    $googleClientId !== "" &&
+    $googleClientSecret !== "" &&
+    $googleRedirectUri !== ""
+) {
 
-if(isset($_GET["code"])){
+    $cliente = new Google_Client();
+    $cliente->setClientId($googleClientId);
+    $cliente->setClientSecret($googleClientSecret);
+    $cliente->setRedirectUri($googleRedirectUri);
+    $cliente->setAccessType("offline");
+    $cliente->setScopes(["profile", "email"]);
 
-	$token = $cliente->authenticate($_GET["code"]);
+    $rutaGoogle = $cliente->createAuthUrl();
 
-	$_SESSION['id_token_google'] = $token;
+    if(isset($_GET["code"])){
 
-	$cliente->setAccessToken($token);
+        $token = $cliente->authenticate($_GET["code"]);
 
-}
+        $_SESSION["id_token_google"] = $token;
 
-/*=============================================
-RECIBIMOS LOS DATOS CIFRADOS DE GOOGLE EN UN ARRAY
-=============================================*/
+        $cliente->setAccessToken($token);
 
-if($cliente->getAccessToken()){
+    }
 
- 	$item = $cliente->verifyIdToken();
+    if($cliente->getAccessToken()){
 
- 	$datos = array("nombre"=>$item["name"],
-				   "email"=>$item["email"],
-				   "foto"=>$item["picture"],
-				   "password"=>"null",
-				   "modo"=>"google",
-				   "verificacion"=>0,
-				   "emailEncriptado"=>"null");
+        $item = $cliente->verifyIdToken();
 
- 	$respuesta = ControladorUsuarios::ctrRegistroRedesSociales($datos);
+        $datos = array("nombre"=>$item["name"],
+                       "email"=>$item["email"],
+                       "foto"=>$item["picture"],
+                       "password"=>"null",
+                       "modo"=>"google",
+                       "verificacion"=>0,
+                       "emailEncriptado"=>"null");
 
- 	echo '<script>
-		
-	setTimeout(function(){
+        $respuesta = ControladorUsuarios::ctrRegistroRedesSociales($datos);
 
-		window.location = localStorage.getItem("rutaActual");
+        echo '<script>
 
-	},1000);
+        setTimeout(function(){
 
- 	</script>';
+            window.location = localStorage.getItem("rutaActual");
 
+        },1000);
+
+        </script>';
+
+    }
 }
 
 ?>
