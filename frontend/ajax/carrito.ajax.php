@@ -50,6 +50,37 @@ if(isset($_POST["calcularCheckout"])){
 	exit;
 }
 
+/*=============================================
+ADQUIRIR PRODUCTO GRATIS
+=============================================*/
+
+if(isset($_POST["adquirirGratis"])){
+
+	if(!isset($_SESSION["id"])){
+		http_response_code(401);
+		echo "unauthorized";
+		exit;
+	}
+
+	$idProducto = (int) ($_POST["idProducto"] ?? 0);
+	$detalle = (string) ($_POST["detalle"] ?? "");
+	$email = (string) ($_SESSION["email"] ?? "");
+
+	$respuesta = ControladorCarrito::ctrAdquirirProductoGratis(
+		(int) $_SESSION["id"],
+		$idProducto,
+		$email,
+		$detalle
+	);
+
+	if($respuesta === "error"){
+		http_response_code(422);
+	}
+
+	echo $respuesta;
+	exit;
+}
+
 class AjaxCarrito{
 
 	/*=============================================
