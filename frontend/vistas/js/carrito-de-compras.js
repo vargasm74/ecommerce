@@ -1316,6 +1316,15 @@ $(document).on("click", ".agregarGratis", function(){
 					window.location = rutaOculta+"perfil";
 				});
 
+			}else if(respuesta === "agotado"){
+
+				swal({
+					title: "Producto agotado",
+					text: "Se alcanzó el cupo disponible para este producto gratuito.",
+					type: "warning",
+					confirmButtonText: "Cerrar"
+				});
+
 			}else if(respuesta === "existe"){
 
 				swal({
