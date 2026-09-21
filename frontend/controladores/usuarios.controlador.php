@@ -14,7 +14,7 @@ class ControladorUsuarios{
 			   preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["regEmail"]) &&
 			   preg_match('/^[a-zA-Z0-9]+$/', $_POST["regPassword"])){
 
-			   	$encriptar = crypt($_POST["regPassword"], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+			   	$encriptar = password_hash($_POST["regPassword"], PASSWORD_DEFAULT);
 
 			   	$encriptarEmail = md5($_POST["regEmail"]);
 
@@ -206,15 +206,30 @@ class ControladorUsuarios{
 			if(preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["ingEmail"]) &&
 			   preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingPassword"])){
 
-				$encriptar = crypt($_POST["ingPassword"], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
-
 				$tabla = "usuarios";
 				$item = "email";
 				$valor = $_POST["ingEmail"];
 
 				$respuesta = ModeloUsuarios::mdlMostrarUsuario($tabla, $item, $valor);
 
-				if($respuesta["email"] == $_POST["ingEmail"] && $respuesta["password"] == $encriptar){
+				$passwordValida = is_array($respuesta)
+					&& isset($respuesta["password"])
+					&& password_verify($_POST["ingPassword"], $respuesta["password"]);
+
+				if($passwordValida){
+
+					if(password_needs_rehash($respuesta["password"], PASSWORD_DEFAULT)){
+
+						$nuevoHash = password_hash($_POST["ingPassword"], PASSWORD_DEFAULT);
+
+						ModeloUsuarios::mdlActualizarUsuario(
+							$tabla,
+							$respuesta["id"],
+							"password",
+							$nuevoHash
+						);
+
+					}
 
 					if($respuesta["verificacion"] == 1){
 
@@ -238,12 +253,17 @@ class ControladorUsuarios{
 
 					}else{
 
+						if(session_status() !== PHP_SESSION_ACTIVE){
+							session_start();
+						}
+
+						session_regenerate_id(true);
+
 						$_SESSION["validarSesion"] = "ok";
 						$_SESSION["id"] = $respuesta["id"];
 						$_SESSION["nombre"] = $respuesta["nombre"];
 						$_SESSION["foto"] = $respuesta["foto"];
 						$_SESSION["email"] = $respuesta["email"];
-						$_SESSION["password"] = $respuesta["password"];
 						$_SESSION["modo"] = $respuesta["modo"];
 
 						echo '<script>
@@ -336,7 +356,7 @@ class ControladorUsuarios{
 
 				$nuevaPassword = generarPassword(11);
 
-				$encriptar = crypt($nuevaPassword, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+				$encriptar = password_hash($nuevaPassword, PASSWORD_DEFAULT);
 
 				$tabla = "usuarios";
 
@@ -568,26 +588,34 @@ class ControladorUsuarios{
 
 			if($respuesta2["modo"] == "facebook"){
 
-				session_start();
+				if(session_status() !== PHP_SESSION_ACTIVE){
+					session_start();
+				}
+
+				session_regenerate_id(true);
 
 				$_SESSION["validarSesion"] = "ok";
 				$_SESSION["id"] = $respuesta2["id"];
 				$_SESSION["nombre"] = $respuesta2["nombre"];
 				$_SESSION["foto"] = $respuesta2["foto"];
 				$_SESSION["email"] = $respuesta2["email"];
-				$_SESSION["password"] = $respuesta2["password"];
 				$_SESSION["modo"] = $respuesta2["modo"];
 
 				echo "ok";
 
 			}else if($respuesta2["modo"] == "google"){
 
+				if(session_status() !== PHP_SESSION_ACTIVE){
+					session_start();
+				}
+
+				session_regenerate_id(true);
+
 				$_SESSION["validarSesion"] = "ok";
 				$_SESSION["id"] = $respuesta2["id"];
 				$_SESSION["nombre"] = $respuesta2["nombre"];
 				$_SESSION["foto"] = $respuesta2["foto"];
 				$_SESSION["email"] = $respuesta2["email"];
-				$_SESSION["password"] = $respuesta2["password"];
 				$_SESSION["modo"] = $respuesta2["modo"];
 
 				echo "<span style='color:white'>ok</span>";
@@ -608,13 +636,21 @@ class ControladorUsuarios{
 
 	public function ctrActualizarPerfil(){
 
-		if(isset($_POST["editarNombre"])){
+		if(isset($_POST["editarNombre"]) && isset($_SESSION["id"])){
+
+			$tabla = "usuarios";
+			$idUsuario = (int) $_SESSION["id"];
+			$usuarioActual = ModeloUsuarios::mdlMostrarUsuario($tabla, "id", $idUsuario);
+
+			if(!$usuarioActual){
+				return;
+			}
 
 			/*=============================================
 			VALIDAR IMAGEN
 			=============================================*/
 
-			$ruta = $_POST["fotoUsuario"];
+			$ruta = $usuarioActual["foto"];
 
 			if(isset($_FILES["datosImagen"]["tmp_name"]) && !empty($_FILES["datosImagen"]["tmp_name"])){
 
@@ -622,7 +658,7 @@ class ControladorUsuarios{
 				PRIMERO PREGUNTAMOS SI EXISTE OTRA IMAGEN EN LA BD
 				=============================================*/
 
-				$directorio = "vistas/img/usuarios/".$_POST["idUsuario"];
+				$directorio = "vistas/img/usuarios/".$idUsuario;
 
 				if(!empty($_POST["fotoUsuario"])){
 
@@ -647,7 +683,7 @@ class ControladorUsuarios{
 
 				if($_FILES["datosImagen"]["type"] == "image/jpeg"){
 
-					$ruta = "vistas/img/usuarios/".$_POST["idUsuario"]."/".$aleatorio.".jpg";
+					$ruta = "vistas/img/usuarios/".$idUsuario."/".$aleatorio.".jpg";
 
 					/*=============================================
 					MOFICAMOS TAMAÑO DE LA FOTO
@@ -665,7 +701,7 @@ class ControladorUsuarios{
 
 				if($_FILES["datosImagen"]["type"] == "image/png"){
 
-					$ruta = "vistas/img/usuarios/".$_POST["idUsuario"]."/".$aleatorio.".png";
+					$ruta = "vistas/img/usuarios/".$idUsuario."/".$aleatorio.".png";
 
 					/*=============================================
 					MOFICAMOS TAMAÑO DE LA FOTO
@@ -689,11 +725,11 @@ class ControladorUsuarios{
 
 			if($_POST["editarPassword"] == ""){
 
-				$password = $_POST["passUsuario"];
+				$password = $usuarioActual["password"];
 
 			}else{
 
-				$password = crypt($_POST["editarPassword"], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+				$password = password_hash($_POST["editarPassword"], PASSWORD_DEFAULT);
 
 			}
 
@@ -701,9 +737,7 @@ class ControladorUsuarios{
 						   "email" => $_POST["editarEmail"],
 						   "password" => $password,
 						   "foto" => $ruta,
-						   "id" => $_POST["idUsuario"]);
-
-			$tabla = "usuarios";
+						   "id" => $idUsuario);
 
 			$respuesta = ModeloUsuarios::mdlActualizarPerfil($tabla, $datos);
 
@@ -714,8 +748,7 @@ class ControladorUsuarios{
 				$_SESSION["nombre"] = $datos["nombre"];
 				$_SESSION["foto"] = $datos["foto"];
 				$_SESSION["email"] = $datos["email"];
-				$_SESSION["password"] = $datos["password"];
-				$_SESSION["modo"] = $_POST["modoUsuario"];
+				$_SESSION["modo"] = $usuarioActual["modo"];
 
 				echo '<script> 
 
