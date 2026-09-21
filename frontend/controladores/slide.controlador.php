@@ -2,7 +2,7 @@
 
 class ControladorSlide{
 
-	public function ctrMostrarSlide(){
+	public static function ctrMostrarSlide(){
 
 		$tabla = "slide";
 
