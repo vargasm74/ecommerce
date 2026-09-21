@@ -124,7 +124,7 @@ INFOPRODUCTOS
 
 					if($portadaFallback !== ""){
 
-						echo '<div class="videoFallback">'
+						echo '<div class="videoFallback">
 								<img
 									src="'.Seguridad::e($portadaFallback).'"
 									alt="'.Seguridad::e($infoproducto["titulo"]).'"
