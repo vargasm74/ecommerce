@@ -109,19 +109,22 @@ INFOPRODUCTOS
 						? $servidor.$infoproducto["portada"]
 						: "";
 
-					echo '<div class="col-sm-6 col-xs-12 mediaProductoVirtual">';
+					echo '<div class="col-sm-6 col-xs-12 mediaProductoVirtual'.($videoValido ? ' tieneVideo' : '').'">';
 
 					if($videoValido){
 
-						echo '<div
-								class="youtubePlayer videoPresentacion"
-								data-video-id="'.Seguridad::e($videoId).'">
+						echo '<div class="youtubePlayerWrapper">
+								<div
+									id="youtubePlayerProducto"
+									class="youtubePlayer videoPresentacion"
+									data-video-id="'.Seguridad::e($videoId).'">
+								</div>
 							</div>';
 					}
 
 					if($portadaFallback !== ""){
 
-						echo '<div class="videoFallback'.($videoValido ? '" style="display:none' : '').'">
+						echo '<div class="videoFallback">'
 								<img
 									src="'.Seguridad::e($portadaFallback).'"
 									alt="'.Seguridad::e($infoproducto["titulo"]).'"
