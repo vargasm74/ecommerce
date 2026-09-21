@@ -218,9 +218,17 @@ SECCIÓN PERFIL
 
 											$comentarios = ControladorUsuarios::ctrMostrarComentariosPerfil($datos);
 
+											if(!$comentarios){
+												$comentarios = array(
+													"id" => 0,
+													"calificacion" => 0,
+													"comentario" => ""
+												);
+											}
+
 												echo '<div class="pull-right">
 
-													<a class="calificarProducto" href="#modalComentarios" data-toggle="modal" idComentario="'.$comentarios["id"].'">
+													<a class="'.($comentarios["id"] ? 'calificarProducto' : 'disabled').'" href="'.($comentarios["id"] ? '#modalComentarios' : '#').'" '.($comentarios["id"] ? 'data-toggle="modal"' : '').' idComentario="'.(int)$comentarios["id"].'">
 													
 														<button class="btn btn-default backColor">Calificar Producto</button>
 
