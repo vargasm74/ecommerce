@@ -1238,7 +1238,10 @@ function pagarConPayu(){
 /*=============================================
 AGREGAR PRODUCTOS GRATIS
 =============================================*/
-$(document).on("click", ".agregarGratis", function(){
+$(document).on("click", ".agregarGratis", function(event){
+
+	event.preventDefault();
+	event.stopPropagation();
 
 	var boton = $(this);
 	var idProducto = Number(boton.attr("idProducto"));
