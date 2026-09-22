@@ -7,6 +7,17 @@ BANNER
 $servidor = Ruta::ctrRutaServidor();
 $url = Ruta::ctrRuta();
 
+$idsDeseosUsuario = array();
+
+if(isset($_SESSION["id"])){
+
+	$deseosUsuario = ControladorUsuarios::ctrMostrarDeseos((int) $_SESSION["id"]);
+
+	foreach(($deseosUsuario ?: array()) as $deseoUsuario){
+		$idsDeseosUsuario[] = (int) $deseoUsuario["id_producto"];
+	}
+}
+
 $ruta = $rutas[0];
 
 $banner = ControladorProductos::ctrMostrarBanner($ruta);
@@ -330,7 +341,7 @@ LISTAR PRODUCTOS
 								
 								<div class="btn-group pull-right">
 									
-									<button type="button" class="btn btn-default btn-xs deseos" idProducto="'.$value["id"].'" data-toggle="tooltip" title="Agregar a mi lista de deseos">
+									<button type="button" class="btn btn-default btn-xs deseos '.(in_array((int)$value["id"], $idsDeseosUsuario, true) ? 'btn-danger' : '').'" idProducto="'.$value["id"].'" data-toggle="tooltip" title="Agregar a mi lista de deseos">
 										
 										<i class="fa fa-heart" aria-hidden="true"></i>
 
@@ -457,7 +468,7 @@ LISTAR PRODUCTOS
 
 							echo '<div class="btn-group pull-left enlaces">
 						  	
-						  		<button type="button" class="btn btn-default btn-xs deseos"  idProducto="'.$value["id"].'" data-toggle="tooltip" title="Agregar a mi lista de deseos">
+						  		<button type="button" class="btn btn-default btn-xs deseos '.(in_array((int)$value["id"], $idsDeseosUsuario, true) ? 'btn-danger' : '').'"  idProducto="'.$value["id"].'" data-toggle="tooltip" title="Agregar a mi lista de deseos">
 
 						  			<i class="fa fa-heart" aria-hidden="true"></i>
 
