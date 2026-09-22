@@ -656,18 +656,18 @@ function actualizarResumenCheckout(pais, alFinalizar){
 	$(".btnPagar").prop("disabled", true);
 	$(".formPayu input[name='Submit']").prop("disabled", true);
 
-	var botonesProducto = $(".cuerpoCarrito button, .comprarAhora button");
 	var cantidadesProducto = $(".cuerpoCarrito .cantidadItem, .comprarAhora .cantidadItem");
 	var ids = [];
 	var cantidades = [];
 
 	for(var i = 0; i < cantidadesProducto.length; i++){
 
-		var idProducto = Number($(botonesProducto[i]).attr("idProducto"));
-		var cantidad = Number($(cantidadesProducto[i]).val());
+		var campoCantidad = $(cantidadesProducto[i]);
+		var idProducto = Number(campoCantidad.attr("idProducto"));
+		var cantidad = Number(campoCantidad.val());
 
 		if(Number.isInteger(idProducto) && idProducto > 0 &&
-		   Number.isInteger(cantidad) && cantidad > 0){
+		   Number.isInteger(cantidad) && cantidad >= 1 && cantidad <= 100){
 
 			ids.push(idProducto);
 			cantidades.push(cantidad);
