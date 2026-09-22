@@ -133,7 +133,7 @@ for(var i = 0; i < indice.length; i++){
 
 									'<center>'+
 									
-										'<input type="number" class="form-control cantidadItem" min="1" value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+	
+										'<input type="number" class="form-control cantidadItem" min="1" max="100" step="1" value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+	
 
 									'</center>'+
 
@@ -425,8 +425,27 @@ GENERAR SUBTOTAL DESPUES DE CAMBIAR CANTIDAD
 =============================================*/
 $(document).on("change", ".cantidadItem", function(){
 
-	var cantidad = $(this).val();
-	var precio = $(this).attr("precio");
+	var inputCantidad = $(this);
+	var cantidad = Number(inputCantidad.val());
+
+	if(!Number.isInteger(cantidad) || cantidad < 1){
+		cantidad = 1;
+	}
+
+	if(cantidad > 100){
+		cantidad = 100;
+
+		swal({
+			title: "Cantidad máxima",
+			text: "Puede seleccionar hasta 100 unidades por producto.",
+			type: "warning",
+			confirmButtonText: "Cerrar"
+		});
+	}
+
+	inputCantidad.val(cantidad);
+
+	var precio = Number(inputCantidad.attr("precio"));
 	var idProducto = $(this).attr("idProducto");
 	var item = $(this).attr("item");
 
@@ -554,6 +573,9 @@ RESUMEN DE CHECKOUT CALCULADO POR EL SERVIDOR
 
 function actualizarResumenCheckout(pais, alFinalizar){
 
+	$(".btnPagar").prop("disabled", true);
+	$(".formPayu input[name='Submit']").prop("disabled", true);
+
 	var botonesProducto = $(".cuerpoCarrito button, .comprarAhora button");
 	var cantidadesProducto = $(".cuerpoCarrito .cantidadItem, .comprarAhora .cantidadItem");
 	var ids = [];
@@ -643,8 +665,10 @@ function actualizarResumenCheckout(pais, alFinalizar){
 
 			localStorage.setItem("total", hex_md5(respuesta.total));
 
-			$(".btnPagar").prop("disabled", false);
-			$(".formPayu input[name='Submit']").prop("disabled", false);
+			var puedePagar = !(respuesta.requiere_envio && !respuesta.pais_envio);
+
+			$(".btnPagar").prop("disabled", !puedePagar);
+			$(".formPayu input[name='Submit']").prop("disabled", !puedePagar);
 
 			if(typeof alFinalizar === "function"){
 				alFinalizar(respuesta);
