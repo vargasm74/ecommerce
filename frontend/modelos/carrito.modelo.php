@@ -69,6 +69,27 @@ class ModeloCarrito{
 	}
 
 	/*=============================================
+	VERIFICAR COMPRA DE USUARIO
+	=============================================*/
+
+	static public function mdlUsuarioTieneCompra($idUsuario, $idProducto){
+
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT id
+			 FROM compras
+			 WHERE id_usuario = :id_usuario
+			   AND id_producto = :id_producto
+			 LIMIT 1"
+		);
+
+		$stmt->bindValue(":id_usuario", (int) $idUsuario, PDO::PARAM_INT);
+		$stmt->bindValue(":id_producto", (int) $idProducto, PDO::PARAM_INT);
+		$stmt->execute();
+
+		return (bool) $stmt->fetch();
+	}
+
+	/*=============================================
 	ADQUIRIR PRODUCTO GRATIS
 	=============================================*/
 
