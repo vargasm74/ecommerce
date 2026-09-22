@@ -477,30 +477,86 @@ $(document).on("click", ".deseos", function(){
 BORRAR PRODUCTO DE LISTA DE DESEOS
 =============================================*/
 
-$(".quitarDeseo").click(function(){
+$(document).on("click", ".quitarDeseo", function(){
 
-	var idDeseo = $(this).attr("idDeseo");
+	var boton = $(this);
+	var idDeseo = Number(boton.attr("idDeseo"));
+	var tarjeta = boton.closest("li");
 
-	$(this).parent().parent().parent().remove();
+	if(!Number.isInteger(idDeseo) || idDeseo <= 0){
+		return;
+	}
+
+	boton.prop("disabled", true);
 
 	var datos = new FormData();
 	datos.append("idDeseo", idDeseo);
 
 	$.ajax({
-			url:rutaOculta+"ajax/usuarios.ajax.php",
-			method:"POST",
-			data: datos,
-			cache: false,
-			contentType: false,
-			processData: false,
-			success:function(respuesta){
-			
+		url:rutaOculta+"ajax/usuarios.ajax.php",
+		method:"POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success:function(respuesta){
+
+			respuesta = $.trim(respuesta);
+
+			if(respuesta === "ok"){
+
+				tarjeta.remove();
+
+				if($("#deseos .quitarDeseo").length === 0){
+
+					$("#deseos").html(
+						'<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center error404">'+
+						'<h1><small>¡Oops!</small></h1>'+
+						'<h2>Aún no tiene productos en su lista de deseos</h2>'+
+						'</div>'
+					);
+				}
+
+			}else{
+
+				swal({
+					title: "No se pudo quitar",
+					text: "El producto sigue en tu lista de deseos.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
 			}
+		},
+		error:function(xhr){
 
-		});
+			if(xhr.status === 401){
 
+				swal({
+					title: "Sesión finalizada",
+					text: "Volvé a ingresar para modificar tu lista de deseos.",
+					type: "warning",
+					confirmButtonText: "Ingresar"
+				}, function(){
+					$("#modalIngreso").modal("show");
+				});
+
+			}else{
+
+				swal({
+					title: "Error",
+					text: "No se pudo actualizar la lista de deseos.",
+					type: "error",
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		complete:function(){
+			boton.prop("disabled", false);
+		}
+	});
 
 })
+
 
 /*=============================================
 ELIMINAR USUARIO
