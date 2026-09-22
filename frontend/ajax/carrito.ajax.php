@@ -56,12 +56,6 @@ ADQUIRIR PRODUCTO GRATIS
 
 if(isset($_POST["adquirirGratis"])){
 
-	error_log(
-		"GRATIS ENDPOINT usuario="
-		.($_SESSION["id"] ?? "sin-sesion")
-		." producto="
-		.($_POST["idProducto"] ?? "sin-producto")
-	);
 
 	if(!isset($_SESSION["id"])){
 		http_response_code(401);
@@ -84,7 +78,6 @@ if(isset($_POST["adquirirGratis"])){
 		http_response_code(422);
 	}
 
-	error_log("GRATIS ENDPOINT respuesta=".$respuesta);
 	echo $respuesta;
 	exit;
 }
