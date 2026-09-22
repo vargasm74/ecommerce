@@ -78,6 +78,7 @@ class ModeloCarrito{
 
 		try{
 
+			error_log("GRATIS TRACE inicio usuario=".$idUsuario." producto=".$idProducto);
 			$conexion->beginTransaction();
 
 			$stmt = $conexion->prepare(
@@ -91,6 +92,8 @@ class ModeloCarrito{
 			$stmt->execute();
 
 			$producto = $stmt->fetch();
+
+			error_log("GRATIS TRACE producto=".($producto ? "ok" : "no"));
 
 			if(!$producto){
 				throw new RuntimeException("Producto inexistente");
@@ -139,6 +142,7 @@ class ModeloCarrito{
 			$stmt->bindValue(":email", $email, PDO::PARAM_STR);
 			$stmt->bindValue(":detalle", $detalle, PDO::PARAM_STR);
 			$stmt->execute();
+			error_log("GRATIS TRACE compra insertada id=".$conexion->lastInsertId());
 
 			$stmt = $conexion->prepare(
 				"INSERT INTO comentarios (id_usuario, id_producto, calificacion, comentario)
@@ -154,6 +158,7 @@ class ModeloCarrito{
 			$stmt->bindValue(":id_usuario2", $idUsuario, PDO::PARAM_INT);
 			$stmt->bindValue(":id_producto2", $idProducto, PDO::PARAM_INT);
 			$stmt->execute();
+			error_log("GRATIS TRACE comentario ok");
 
 			$stmt = $conexion->prepare(
 				"UPDATE productos
@@ -162,8 +167,10 @@ class ModeloCarrito{
 			);
 			$stmt->bindValue(":id", $idProducto, PDO::PARAM_INT);
 			$stmt->execute();
+			error_log("GRATIS TRACE contador actualizado");
 
 			$conexion->commit();
+			error_log("GRATIS TRACE commit ok");
 
 			return "ok";
 
@@ -173,7 +180,7 @@ class ModeloCarrito{
 				$conexion->rollBack();
 			}
 
-			error_log("Adquisicion gratuita rechazada: ".$e->getMessage());
+			error_log("GRATIS TRACE error ".get_class($e).": ".$e->getMessage());
 			return "error";
 		}
 	}
