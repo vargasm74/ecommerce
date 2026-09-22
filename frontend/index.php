@@ -4,6 +4,10 @@ require_once "modelos/seguridad.php";
 Seguridad::iniciarSesion();
 Seguridad::exigirCsrf();
 
+if(ob_get_level() === 0){
+    ob_start();
+}
+
 require_once "controladores/plantilla.controlador.php";
 require_once "controladores/productos.controlador.php";
 require_once "controladores/slide.controlador.php";
