@@ -658,6 +658,15 @@ INFOPRODUCTOS
 						? null
 						: max(0, $cupoGratis - (int) $infoproducto["ventasGratis"]);
 
+					$productoYaAdquirido = false;
+
+					if(isset($_SESSION["id"])){
+						$productoYaAdquirido = ControladorCarrito::ctrUsuarioTieneCompra(
+							(int) $_SESSION["id"],
+							(int) $infoproducto["id"]
+						);
+					}
+
 					$enDeseos = false;
 
 					if(isset($_SESSION["id"])){
@@ -687,7 +696,16 @@ INFOPRODUCTOS
 
 						echo '<div class="col-md-6 col-xs-12">';
 
-						if($cupoGratisDisponible !== null && $cupoGratisDisponible <= 0){
+						if($productoYaAdquirido){
+
+							echo '<button type="button" class="btn btn-success btn-block btn-lg" disabled>
+									<i class="fa fa-check"></i> PRODUCTO YA ADQUIRIDO
+								</button>
+								<a href="'.$url.'perfil" class="btn btn-default btn-block" style="margin-top:8px">
+									<i class="fa fa-list-ul"></i> VER EN MIS COMPRAS
+								</a>';
+
+						}else if($cupoGratisDisponible !== null && $cupoGratisDisponible <= 0){
 
 							echo '<button type="button" class="btn btn-default btn-block btn-lg" disabled>AGOTADO</button>';
 
