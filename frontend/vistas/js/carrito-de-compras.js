@@ -133,7 +133,7 @@ for(var i = 0; i < indice.length; i++){
 
 									'<center>'+
 									
-										'<input type="number" class="form-control cantidadItem" min="1" max="100" step="1" inputmode="numeric" value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+	
+										'<input type="text" class="form-control cantidadItem" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+	
 
 									'</center>'+
 
@@ -452,82 +452,135 @@ function guardarEstadoCarrito(){
 	cestaCarrito(listaCarrito.length);
 }
 
-function actualizarCantidadItem(input, mostrarAviso){
-
-	var campo = $(input);
-	var valorCrudo = String(campo.val()).trim();
-
-	// Mientras el usuario borra el campo para escribir otro valor,
-	// esperamos al blur/change antes de imponer el mínimo.
-	if(valorCrudo === ""){
-		return;
-	}
-
-	var cantidad = Number(valorCrudo);
-	var corregida = false;
-
-	if(!Number.isFinite(cantidad)){
-		cantidad = 1;
-		corregida = true;
-	}
-
-	if(!Number.isInteger(cantidad)){
-		cantidad = Math.floor(cantidad);
-		corregida = true;
-	}
-
-	if(cantidad < 1){
-		cantidad = 1;
-		corregida = true;
-	}
-
-	if(cantidad > 100){
-		cantidad = 100;
-		corregida = true;
-	}
-
-	// Normaliza también valores como 0101.
-	if(String(cantidad) !== valorCrudo){
-		corregida = true;
-	}
-
-	campo.val(cantidad);
+function recalcularCantidadItem(campo, cantidad){
 
 	var precio = Number(campo.attr("precio"));
 	var item = campo.attr("item");
 	var subtotal = cantidad * precio;
+
+	campo.val(cantidad);
+	campo.data("ultimaCantidadValida", cantidad);
 
 	$(".subTotal"+item).html(
 		'<strong>USD $<span>'+subtotal.toFixed(2)+'</span></strong>'
 	);
 
 	guardarEstadoCarrito();
+}
 
-	if(corregida && mostrarAviso){
+function validarCantidadesCarrito(mostrarAviso){
+
+	var valido = true;
+	var primerCampoInvalido = null;
+
+	$(".cuerpoCarrito .cantidadItem").each(function(){
+
+		var valor = String($(this).val()).trim();
+		var cantidad = Number(valor);
+
+		if(!/^\d+$/.test(valor) ||
+		   !Number.isInteger(cantidad) ||
+		   cantidad < 1 ||
+		   cantidad > 100){
+
+			valido = false;
+
+			if(!primerCampoInvalido){
+				primerCampoInvalido = this;
+			}
+		}
+	});
+
+	if(!valido && mostrarAviso){
 
 		swal({
-			title: "Cantidad corregida",
+			title: "Cantidad inválida",
+			text: "Las cantidades deben ser números enteros entre 1 y 100.",
+			type: "warning",
+			confirmButtonText: "Corregir"
+		}, function(){
+
+			if(primerCampoInvalido){
+				$(primerCampoInvalido).focus().select();
+			}
+		});
+	}
+
+	return valido;
+}
+
+$(document).on("focus", ".cantidadItem", function(){
+
+	var valor = Number($(this).val());
+
+	if(Number.isInteger(valor) && valor >= 1 && valor <= 100){
+		$(this).data("ultimaCantidadValida", valor);
+	}else{
+		$(this).data("ultimaCantidadValida", 1);
+	}
+});
+
+$(document).on("keydown", ".cantidadItem", function(event){
+
+	if([".", ",", "e", "E", "+", "-", " "].indexOf(event.key) !== -1){
+		event.preventDefault();
+	}
+});
+
+$(document).on("input", ".cantidadItem", function(){
+
+	var campo = $(this);
+	var valor = String(campo.val()).trim();
+
+	if(valor === ""){
+		return;
+	}
+
+	if(!/^\d+$/.test(valor)){
+
+		var anterior = Number(campo.data("ultimaCantidadValida")) || 1;
+		recalcularCantidadItem(campo, anterior);
+		return;
+	}
+
+	var cantidad = Number(valor);
+
+	if(!Number.isInteger(cantidad) || cantidad < 1){
+
+		recalcularCantidadItem(campo, 1);
+		return;
+	}
+
+	if(cantidad > 100){
+
+		recalcularCantidadItem(campo, 100);
+		return;
+	}
+
+	recalcularCantidadItem(campo, cantidad);
+});
+
+$(document).on("blur change", ".cantidadItem", function(){
+
+	var campo = $(this);
+	var valor = String(campo.val()).trim();
+	var cantidad = Number(valor);
+
+	if(!/^\d+$/.test(valor) ||
+	   !Number.isInteger(cantidad) ||
+	   cantidad < 1 ||
+	   cantidad > 100){
+
+		var anterior = Number(campo.data("ultimaCantidadValida")) || 1;
+		recalcularCantidadItem(campo, anterior);
+
+		swal({
+			title: "Cantidad inválida",
 			text: "La cantidad debe ser un número entero entre 1 y 100.",
 			type: "warning",
 			confirmButtonText: "Cerrar"
 		});
 	}
-}
-
-$(document).on("input", ".cantidadItem", function(){
-
-	actualizarCantidadItem(this, false);
-
-});
-
-$(document).on("change blur", ".cantidadItem", function(){
-
-	if(String($(this).val()).trim() === ""){
-		$(this).val(1);
-	}
-
-	actualizarCantidadItem(this, true);
-
 })
 
 
@@ -740,7 +793,16 @@ function actualizarResumenCheckout(pais, alFinalizar){
 CHECKOUT
 =============================================*/
 
-$("#btnCheckout").click(function(){
+$("#btnCheckout").click(function(event){
+
+	event.preventDefault();
+	event.stopPropagation();
+
+	if(!validarCantidadesCarrito(true)){
+		return false;
+	}
+
+	$("#modalCheckout").modal("show");
 
 	$(".listaProductos table.tablaProductos tbody").html("");
 
