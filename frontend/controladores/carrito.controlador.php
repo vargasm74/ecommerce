@@ -217,6 +217,26 @@ class ControladorCarrito{
 	}
 
 	/*=============================================
+	VERIFICAR COMPRA DE USUARIO
+	=============================================*/
+
+	static public function ctrUsuarioTieneCompra($idUsuario, $idProducto){
+
+		$idUsuario = filter_var($idUsuario, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 1)
+		));
+		$idProducto = filter_var($idProducto, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 1)
+		));
+
+		if($idUsuario === false || $idProducto === false){
+			return false;
+		}
+
+		return ModeloCarrito::mdlUsuarioTieneCompra($idUsuario, $idProducto);
+	}
+
+	/*=============================================
 	ADQUIRIR PRODUCTO GRATIS
 	=============================================*/
 
