@@ -34,6 +34,29 @@ if(localStorage.getItem("listaProductos") != null){
 
 	try{
 		listaCarrito = JSON.parse(localStorage.getItem("listaProductos")) || [];
+
+		listaCarrito = listaCarrito.map(function(item){
+
+			var cantidad = Number(item.cantidad);
+
+			if(item.tipo === "virtual"){
+				cantidad = 1;
+			}else{
+				if(!Number.isInteger(cantidad) || cantidad < 1){
+					cantidad = 1;
+				}
+
+				if(cantidad > 100){
+					cantidad = 100;
+				}
+			}
+
+			item.cantidad = String(cantidad);
+			return item;
+		});
+
+		localStorage.setItem("listaProductos", JSON.stringify(listaCarrito));
+
 	}catch(e){
 		listaCarrito = [];
 		localStorage.removeItem("listaProductos");
@@ -79,6 +102,8 @@ for(var i = 0; i < indice.length; i++){
 						precio = respuesta["precioOferta"];
 						
 					}
+
+					var controlesCantidadDeshabilitados = item.tipo === "virtual" ? " disabled" : "";
 
 					$(".cuerpoCarrito").append(
 
@@ -129,13 +154,21 @@ for(var i = 0; i < indice.length; i++){
 
 								'<br>'+	
 
-								'<div class="col-xs-8">'+
+								'<div class="col-xs-12">'+
 
-									'<center>'+
-									
-										'<input type="text" class="form-control cantidadItem" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+	
-
-									'</center>'+
+									'<div class="input-group">'+
+										'<span class="input-group-btn">'+
+											'<button type="button" class="btn btn-default disminuirCantidad"'+controlesCantidadDeshabilitados+' aria-label="Disminuir cantidad">'+
+												'<i class="fa fa-minus"></i>'+
+											'</button>'+
+										'</span>'+
+										'<input type="text" class="form-control cantidadItem text-center" readonly value="'+item.cantidad+'" tipo="'+item.tipo+'" precio="'+precio+'" idProducto="'+item.idProducto+'" item="'+index+'">'+
+										'<span class="input-group-btn">'+
+											'<button type="button" class="btn btn-default aumentarCantidad"'+controlesCantidadDeshabilitados+' aria-label="Aumentar cantidad">'+
+												'<i class="fa fa-plus"></i>'+
+											'</button>'+
+										'</span>'+
+									'</div>'+
 
 								'</div>'+
 
@@ -509,79 +542,31 @@ function validarCantidadesCarrito(mostrarAviso){
 	return valido;
 }
 
-$(document).on("focus", ".cantidadItem", function(){
+$(document).on("click", ".disminuirCantidad, .aumentarCantidad", function(){
 
-	var valor = Number($(this).val());
+	var boton = $(this);
+	var campo = boton.closest(".input-group").find(".cantidadItem");
+	var tipo = campo.attr("tipo");
 
-	if(Number.isInteger(valor) && valor >= 1 && valor <= 100){
-		$(this).data("ultimaCantidadValida", valor);
+	if(tipo === "virtual"){
+		return;
+	}
+
+	var cantidad = Number(campo.val());
+
+	if(!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100){
+		cantidad = 1;
+	}
+
+	if(boton.hasClass("aumentarCantidad")){
+		cantidad = Math.min(100, cantidad + 1);
 	}else{
-		$(this).data("ultimaCantidadValida", 1);
-	}
-});
-
-$(document).on("keydown", ".cantidadItem", function(event){
-
-	if([".", ",", "e", "E", "+", "-", " "].indexOf(event.key) !== -1){
-		event.preventDefault();
-	}
-});
-
-$(document).on("input", ".cantidadItem", function(){
-
-	var campo = $(this);
-	var valor = String(campo.val()).trim();
-
-	if(valor === ""){
-		return;
-	}
-
-	if(!/^\d+$/.test(valor)){
-
-		var anterior = Number(campo.data("ultimaCantidadValida")) || 1;
-		recalcularCantidadItem(campo, anterior);
-		return;
-	}
-
-	var cantidad = Number(valor);
-
-	if(!Number.isInteger(cantidad) || cantidad < 1){
-
-		recalcularCantidadItem(campo, 1);
-		return;
-	}
-
-	if(cantidad > 100){
-
-		recalcularCantidadItem(campo, 100);
-		return;
+		cantidad = Math.max(1, cantidad - 1);
 	}
 
 	recalcularCantidadItem(campo, cantidad);
-});
-
-$(document).on("blur change", ".cantidadItem", function(){
-
-	var campo = $(this);
-	var valor = String(campo.val()).trim();
-	var cantidad = Number(valor);
-
-	if(!/^\d+$/.test(valor) ||
-	   !Number.isInteger(cantidad) ||
-	   cantidad < 1 ||
-	   cantidad > 100){
-
-		var anterior = Number(campo.data("ultimaCantidadValida")) || 1;
-		recalcularCantidadItem(campo, anterior);
-
-		swal({
-			title: "Cantidad inválida",
-			text: "La cantidad debe ser un número entero entre 1 y 100.",
-			type: "warning",
-			confirmButtonText: "Cerrar"
-		});
-	}
 })
+
 
 
 /*=============================================
