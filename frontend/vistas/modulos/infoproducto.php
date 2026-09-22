@@ -689,11 +689,12 @@ INFOPRODUCTOS
 
 						if($cupoGratisDisponible !== null && $cupoGratisDisponible <= 0){
 
-							echo '<button class="btn btn-default btn-block btn-lg" disabled>AGOTADO</button>';
+							echo '<button type="button" class="btn btn-default btn-block btn-lg" disabled>AGOTADO</button>';
 
 						}else if($infoproducto["tipo"]=="virtual"){
 
 							echo '<button
+								type="button"
 								class="btn btn-default btn-block btn-lg backColor agregarGratis"
 								idProducto="'.$infoproducto["id"].'"
 								tipo="'.Seguridad::e($infoproducto["tipo"]).'"
@@ -704,6 +705,7 @@ INFOPRODUCTOS
 						}else{
 
 							echo '<button
+								type="button"
 								class="btn btn-default btn-block btn-lg backColor agregarGratis"
 								idProducto="'.$infoproducto["id"].'"
 								tipo="'.Seguridad::e($infoproducto["tipo"]).'"
@@ -723,7 +725,7 @@ INFOPRODUCTOS
 							if(isset($_SESSION["validarSesion"]) && $_SESSION["validarSesion"] == "ok"){
 
 								echo '<a id="btnCheckout" href="#modalComprarAhora" data-toggle="modal">
-									<button class="btn btn-default btn-block btn-lg">
+									<button type="button" class="btn btn-default btn-block btn-lg">
 										<small>COMPRAR AHORA</small>
 									</button>
 								</a>';
@@ -731,7 +733,7 @@ INFOPRODUCTOS
 							}else{
 
 								echo '<a href="#modalIngreso" data-toggle="modal">
-									<button class="btn btn-default btn-block btn-lg">
+									<button type="button" class="btn btn-default btn-block btn-lg">
 										<small>COMPRAR AHORA</small>
 									</button>
 								</a>';
@@ -740,7 +742,7 @@ INFOPRODUCTOS
 							echo '</div>
 
 							<div class="col-md-6 col-xs-12">
-								<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"
+								<button type="button" class="btn btn-default btn-block btn-lg backColor agregarCarrito"
 									idProducto="'.$infoproducto["id"].'"
 									imagen="'.Seguridad::e($servidor.$infoproducto["portada"]).'"
 									titulo="'.Seguridad::e($infoproducto["titulo"]).'"
@@ -755,7 +757,7 @@ INFOPRODUCTOS
 						}else{
 
 							echo '<div class="col-lg-6 col-md-8 col-xs-12">
-								<button class="btn btn-default btn-block btn-lg backColor agregarCarrito"
+								<button type="button" class="btn btn-default btn-block btn-lg backColor agregarCarrito"
 									idProducto="'.$infoproducto["id"].'"
 									imagen="'.Seguridad::e($servidor.$infoproducto["portada"]).'"
 									titulo="'.Seguridad::e($infoproducto["titulo"]).'"
