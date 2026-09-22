@@ -219,25 +219,33 @@ class ModeloUsuarios{
 
 	static public function mdlAgregarDeseo($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (id_usuario, id_producto, calificacion, comentario) VALUES (:id_usuario, :id_producto, 0, '')");
+		$stmt = Conexion::conectar()->prepare(
+			"INSERT INTO $tabla (id_usuario, id_producto)
+			 SELECT :id_usuario, p.id
+			 FROM productos p
+			 WHERE p.id = :id_producto
+			   AND NOT EXISTS (
+				 SELECT 1
+				 FROM $tabla d
+				 WHERE d.id_usuario = :id_usuario2
+				   AND d.id_producto = :id_producto2
+			   )"
+		);
 
-		$stmt->bindParam(":id_usuario", $datos["idUsuario"], PDO::PARAM_INT);
-		$stmt->bindParam(":id_producto", $datos["idProducto"], PDO::PARAM_INT);	
+		$stmt->bindValue(":id_usuario", (int) $datos["idUsuario"], PDO::PARAM_INT);
+		$stmt->bindValue(":id_producto", (int) $datos["idProducto"], PDO::PARAM_INT);
+		$stmt->bindValue(":id_usuario2", (int) $datos["idUsuario"], PDO::PARAM_INT);
+		$stmt->bindValue(":id_producto2", (int) $datos["idProducto"], PDO::PARAM_INT);
 
-		if($stmt -> execute()){
-
-			return "ok";
-
-		}else{
-
+		if(!$stmt->execute()){
 			return "error";
-
 		}
 
-		$stmt-> close();
+		if($stmt->rowCount() === 1){
+			return "ok";
+		}
 
-		$stmt = null;
-
+		return self::mdlExisteDeseo($tabla, $datos) ? "existe" : "producto-invalido";
 	}
 
 	/*=============================================
