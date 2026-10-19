@@ -71,6 +71,7 @@ services:
       - ./database/migrations/20260921_002_slide_links.sql:/docker-entrypoint-initdb.d/030-slide-links.sql:ro
       - ./database/migrations/20260921_003_cupo_productos_gratis.sql:/docker-entrypoint-initdb.d/040-cupo-gratis.sql:ro
       - ./database/migrations/20261019_004_orders_mercadopago.sql:/docker-entrypoint-initdb.d/050-orders-mercadopago.sql:ro
+      - ./database/migrations/20261019_005_orders_webhook_status.sql:/docker-entrypoint-initdb.d/060-orders-webhook-status.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 5s
