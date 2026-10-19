@@ -211,7 +211,7 @@ JAVASCRIPT PERSONALIZADO
 <script src="<?php echo $url; ?>vistas/js/infoproducto.js"></script>
 <script src="<?php echo $url; ?>vistas/js/usuarios.js"></script>
 <script src="<?php echo $url; ?>vistas/js/registroFacebook.js"></script>
-<script src="<?php echo $url; ?>vistas/js/carrito-de-compras.js?v=20261019-1"></script>
+<script src="<?php echo $url; ?>vistas/js/carrito-de-compras.js?v=20261019-2"></script>
 
 <?php if(!empty($facebookOauthEnabled)){ ?>
 <!--=====================================
