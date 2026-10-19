@@ -10,3 +10,6 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Dependencias Composer se instalan dentro de la imagen
+vendor/
