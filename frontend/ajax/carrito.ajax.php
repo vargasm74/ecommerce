@@ -8,6 +8,7 @@ require_once "../extensiones/paypal.controlador.php";
 
 require_once "../controladores/carrito.controlador.php";
 require_once "../modelos/carrito.modelo.php";
+require_once "../modelos/mercadopago.modelo.php";
 
 require_once "../controladores/productos.controlador.php";
 require_once "../modelos/productos.modelo.php";
@@ -35,6 +36,25 @@ if(isset($_POST["calcularCheckout"])){
 
 		$resumen = ControladorCarrito::ctrCalcularResumenCheckout($ids, $cantidades, $pais, $region);
 
+		if(strtoupper(trim((string) $pais)) === "AR"){
+
+			$configPago = ControladorCarrito::ctrConfiguracionPagoArgentina();
+			$resumen["moneda_pago"] = "ARS";
+			$resumen["cotizacion_usd_ars"] = $configPago["cotizacion"];
+			$resumen["mercadopago_habilitado"] = $configPago["mercadopago_habilitado"];
+
+			if($configPago["cotizacion"] !== null){
+				$resumen["total_pago"] = number_format(
+					(float) $resumen["total"] * (float) $configPago["cotizacion"],
+					2,
+					".",
+					""
+				);
+			}else{
+				$resumen["total_pago"] = null;
+			}
+		}
+
 		header("Content-Type: application/json; charset=UTF-8");
 		echo json_encode($resumen, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -49,6 +69,66 @@ if(isset($_POST["calcularCheckout"])){
 
 	exit;
 }
+
+/*=============================================
+CREAR ORDER MERCADO PAGO
+=============================================*/
+
+if(isset($_POST["crearOrdenMercadoPago"])){
+
+	if(!isset($_SESSION["id"])){
+		http_response_code(401);
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode(array("error" => "Debe iniciar sesion"));
+		exit;
+	}
+
+	$ids = json_decode($_POST["productos"] ?? "[]", true);
+	$cantidades = json_decode($_POST["cantidades"] ?? "[]", true);
+	$pais = $_POST["pais"] ?? "";
+	$region = $_POST["region"] ?? "";
+	$email = (string) ($_SESSION["email"] ?? "");
+
+	try{
+
+		$respuesta = ControladorCarrito::ctrCrearOrdenMercadoPago(
+			(int) $_SESSION["id"],
+			$email,
+			$ids,
+			$cantidades,
+			$pais,
+			$region
+		);
+
+		header("Content-Type: application/json; charset=UTF-8");
+		echo json_encode($respuesta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+	}catch(Throwable $e){
+
+		error_log("Mercado Pago order rechazada: ".$e->getMessage());
+
+		$sinConfig = str_contains($e->getMessage(), "no esta configurado")
+			|| str_contains($e->getMessage(), "USD_TO_ARS_RATE");
+
+		http_response_code($sinConfig ? 503 : 422);
+		header("Content-Type: application/json; charset=UTF-8");
+
+		$respuestaError = array(
+			"error" => $sinConfig
+				? "Mercado Pago TEST todavia no esta configurado"
+				: "No se pudo iniciar el pago"
+		);
+
+		if((getenv("APP_ENV") ?: "production") === "development"){
+			$respuestaError["detalle"] = $e->getMessage();
+		}
+
+		echo json_encode($respuestaError, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	}
+
+	exit;
+}
+
 
 /*=============================================
 ADQUIRIR PRODUCTO GRATIS
