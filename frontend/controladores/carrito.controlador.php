@@ -389,6 +389,151 @@ class ControladorCarrito{
 	}
 
 	/*=============================================
+	MAPEAR ESTADO DE MERCADO PAGO
+	=============================================*/
+
+	private static function mapearEstadoMercadoPago($status, $statusDetail){
+
+		$status = strtolower(trim((string) $status));
+		$statusDetail = strtolower(trim((string) $statusDetail));
+
+		if($status === "processed" && $statusDetail === "accredited"){
+			return "PAID";
+		}
+
+		if($status === "processed" && $statusDetail === "refunded"){
+			return "REFUNDED";
+		}
+
+		if($status === "processed" && $statusDetail === "partially_refunded"){
+			return "PARTIALLY_REFUNDED";
+		}
+
+		return match($status){
+			"created" => "PENDING_PAYMENT",
+			"processing" => "PENDING",
+			"action_required" => "ACTION_REQUIRED",
+			"failed" => "REJECTED",
+			"canceled" => "CANCELED",
+			"refunded" => "REFUNDED",
+			"charged_back" => "CHARGEBACK",
+			default => "UNKNOWN_PROVIDER_STATUS"
+		};
+	}
+
+	/*=============================================
+	PROCESAR WEBHOOK MERCADO PAGO
+	=============================================*/
+
+	static public function ctrProcesarWebhookMercadoPago($providerOrderId, $requestId = null){
+
+		$providerOrderId = trim((string) $providerOrderId);
+		$requestId = $requestId !== null ? trim((string) $requestId) : null;
+
+		if($providerOrderId === ""){
+			throw new InvalidArgumentException("Falta provider order id");
+		}
+
+		$orderMp = MercadoPago::consultarOrder($providerOrderId);
+
+		if($orderMp["id"] === "" || $orderMp["id"] !== $providerOrderId){
+			throw new RuntimeException("La Order consultada no coincide con la notificacion");
+		}
+
+		if(!preg_match('/^ecommerce_order_(\d+)$/', $orderMp["external_reference"], $coincidencia)){
+			return array(
+				"resultado" => "ignored",
+				"motivo" => "external_reference no pertenece a este ecommerce"
+			);
+		}
+
+		$orderId = (int) $coincidencia[1];
+		$orderInterna = ModeloCarrito::mdlObtenerOrderInterna($orderId);
+
+		if(!$orderInterna){
+			return array(
+				"resultado" => "ignored",
+				"motivo" => "pedido interno inexistente"
+			);
+		}
+
+		if(!empty($orderInterna["provider_order_id"])
+		   && (string) $orderInterna["provider_order_id"] !== $providerOrderId){
+
+			ModeloCarrito::mdlSincronizarOrderMercadoPago(
+				$orderId,
+				"PAYMENT_MISMATCH",
+				$providerOrderId,
+				(string) $orderMp["status"],
+				(string) $orderMp["status_detail"],
+				$requestId,
+				false,
+				"provider_order_id no coincide"
+			);
+
+			return array(
+				"resultado" => "mismatch",
+				"order_id" => $orderId
+			);
+		}
+
+		$monedaEsperada = strtoupper((string) $orderInterna["currency"]);
+		$monedaMp = strtoupper((string) $orderMp["currency"]);
+		$montoEsperadoCentavos = (int) round((float) $orderInterna["total_amount"] * 100);
+		$montoMpCentavos = (int) round((float) $orderMp["total_amount"] * 100);
+
+		$estadoInterno = self::mapearEstadoMercadoPago(
+			$orderMp["status"],
+			$orderMp["status_detail"]
+		);
+
+		$esPagoAcreditado = $estadoInterno === "PAID";
+		$totalPagadoCentavos = (int) round((float) $orderMp["total_paid_amount"] * 100);
+
+		$mismatch = $monedaEsperada !== $monedaMp
+			|| $montoEsperadoCentavos !== $montoMpCentavos
+			|| ($esPagoAcreditado && $totalPagadoCentavos !== $montoEsperadoCentavos);
+
+		if($mismatch){
+
+			ModeloCarrito::mdlSincronizarOrderMercadoPago(
+				$orderId,
+				"PAYMENT_MISMATCH",
+				$providerOrderId,
+				(string) $orderMp["status"],
+				(string) $orderMp["status_detail"],
+				$requestId,
+				false,
+				"Moneda o importe de Mercado Pago no coincide con el pedido"
+			);
+
+			return array(
+				"resultado" => "mismatch",
+				"order_id" => $orderId
+			);
+		}
+
+		ModeloCarrito::mdlSincronizarOrderMercadoPago(
+			$orderId,
+			$estadoInterno,
+			$providerOrderId,
+			(string) $orderMp["status"],
+			(string) $orderMp["status_detail"],
+			$requestId,
+			$esPagoAcreditado,
+			null
+		);
+
+		return array(
+			"resultado" => "ok",
+			"order_id" => $orderId,
+			"status" => $estadoInterno,
+			"provider_status" => (string) $orderMp["status"],
+			"provider_status_detail" => (string) $orderMp["status_detail"]
+		);
+	}
+
+	/*=============================================
 	VERIFICAR COMPRA DE USUARIO
 	=============================================*/
 
