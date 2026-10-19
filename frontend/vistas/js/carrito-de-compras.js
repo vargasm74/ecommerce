@@ -750,6 +750,8 @@ function actualizarResumenCheckout(pais, alFinalizar){
 			$(".btnPagar").prop("disabled", !puedePagar);
 			$(".formPayu input[name='Submit']").prop("disabled", !puedePagar);
 
+			configurarPagoSegunPais(respuesta);
+
 			if(typeof alFinalizar === "function"){
 				alFinalizar(respuesta);
 			}
@@ -771,6 +773,78 @@ function actualizarResumenCheckout(pais, alFinalizar){
 }
 
 /*=============================================
+PAGO SEGUN PAIS
+=============================================*/
+
+function configurarPagoSegunPais(respuesta){
+
+	var esArgentina = respuesta.pais_envio === "AR";
+
+	if(esArgentina){
+
+		$(".formaPago").hide();
+		$(".divisa").hide();
+		$(".formPayu").hide();
+		$(".btnPagar").hide();
+
+		$(".mercadoPagoInfo").show();
+		$(".btnMercadoPago").show();
+
+		if(respuesta.total_pago){
+
+			$(".filaTotalMercadoPago").show();
+			$(".valorTotalMercadoPago").text(respuesta.total_pago);
+
+			if(respuesta.mercadopago_habilitado){
+
+				$(".mercadoPagoEstado").text(
+					"Cobro en ARS calculado por el servidor. Será redirigido a Mercado Pago."
+				);
+				$(".btnMercadoPago")
+					.prop("disabled", false)
+					.text("PAGAR CON MERCADO PAGO");
+
+			}else{
+
+				$(".mercadoPagoEstado").text(
+					"El total en ARS está calculado, pero Mercado Pago TEST todavía no tiene credenciales configuradas."
+				);
+				$(".btnMercadoPago")
+					.prop("disabled", true)
+					.text("MERCADO PAGO TEST NO CONFIGURADO");
+			}
+
+		}else{
+
+			$(".filaTotalMercadoPago").hide();
+			$(".mercadoPagoEstado").text(
+				"Falta configurar la cotización USD → ARS en el servidor."
+			);
+			$(".btnMercadoPago")
+				.prop("disabled", true)
+				.text("FALTA COTIZACIÓN USD / ARS");
+		}
+
+	}else{
+
+		$(".mercadoPagoInfo").hide();
+		$(".btnMercadoPago").hide().prop("disabled", true);
+		$(".filaTotalMercadoPago").hide();
+
+		$(".formaPago").show();
+		$(".divisa").show();
+
+		if($("#checkPayu").is(":checked")){
+			$(".btnPagar").hide();
+			$(".formPayu").show();
+		}else{
+			$(".formPayu").hide();
+			$(".btnPagar").show();
+		}
+	}
+}
+
+/*=============================================
 /*=============================================
 /*=============================================
 /*=============================================
@@ -789,152 +863,60 @@ $("#btnCheckout").click(function(event){
 
 	$("#modalCheckout").modal("show");
 
-	$(".listaProductos table.tablaProductos tbody").html("");
+	$(".listaProductos table.tablaProductos tbody").empty();
+	$(".filaTotalMercadoPago").hide();
+	$(".mercadoPagoInfo").hide();
+	$(".btnMercadoPago").hide().prop("disabled", true);
 
-	$("#checkPaypal").prop("checked",true);
+	$("#checkPaypal").prop("checked", true);
 	$("#checkPayu").prop("checked", false);
 
-	var idUsuario = $(this).attr("idUsuario");
-	var peso = $(".cuerpoCarrito button, .comprarAhora button");
-	var titulo = $(".cuerpoCarrito .tituloCarritoCompra, .comprarAhora .tituloCarritoCompra");
-	var cantidad = $(".cuerpoCarrito .cantidadItem, .comprarAhora .cantidadItem");
-	var subtotal = $(".cuerpoCarrito .subtotales span, .comprarAhora .subtotales span");
-	var tipoArray =[];
-	var cantidadPeso = [];
+	$(".seleccionePais").html(
+		'<select class="form-control" id="seleccionarPais" required>'+
+		'<option value="">Seleccione el país</option>'+
+		'</select>'
+	);
 
-	/*=============================================
-	SUMA SUBTOTAL
-	=============================================*/
+	$(".formEnvio").show();
 
-	var sumaSubTotal = $(".sumaSubTotal span")
-	
-	$(".valorSubtotal").html($(sumaSubTotal).html());
-	$(".valorSubtotal").attr("valor",$(sumaSubTotal).html());
+	$.ajax({
+		url: rutaOculta+"vistas/js/plugins/countries.json",
+		type: "GET",
+		cache: false,
+		dataType: "json",
+		success: function(respuesta){
 
-	/*=============================================
-	TASAS DE IMPUESTO
-	=============================================*/
-
-	var impuestoTotal = ($(".valorSubtotal").html() * $("#tasaImpuesto").val()) /100;
-	
-	$(".valorTotalImpuesto").html((impuestoTotal).toFixed(2));
-	$(".valorTotalImpuesto").attr("valor",(impuestoTotal).toFixed(2));
-
-	sumaTotalCompra()
-
-	/*=============================================
-	VARIABLES ARRAY 
-	=============================================*/
-
-	for(var i = 0; i < titulo.length; i++){
-
-		var pesoArray = $(peso[i]).attr("peso");
-		var tituloArray = $(titulo[i]).html();
-		var cantidadArray = $(cantidad[i]).val();		
-		var subtotalArray = $(subtotal[i]).html();
-
-		/*=============================================
-		EVALUAR EL PESO DE ACUERDO A LA CANTIDAD DE PRODUCTOS
-		=============================================*/
-
-		cantidadPeso[i] = pesoArray * cantidadArray;
-
-		function sumaArrayPeso(total, numero){
-
-			return total + numero;
-
-		}
-
-		var sumaTotalPeso = cantidadPeso.reduce(sumaArrayPeso);
-		
-		/*=============================================
-		MOSTRAR PRODUCTOS DEFINITIVOS A COMPRAR
-		=============================================*/
-
-		$(".listaProductos table.tablaProductos tbody").append('<tr>'+
-															   '<td class="valorTitulo">'+tituloArray+'</td>'+
-															   '<td class="valorCantidad">'+cantidadArray+'</td>'+
-															   '<td>$<span class="valorItem" valor="'+subtotalArray+'">'+subtotalArray+'</span></td>'+
-															   '<tr>');
-
-		/*=============================================
-		SELECCIONAR PAÍS DE ENVÍO SI HAY PRODUCTOS FÍSICOS
-		=============================================*/
-	
-		tipoArray.push($(cantidad[i]).attr("tipo"));
-		
-		function checkTipo(tipo){
-
-			return tipo == "fisico";
-		
-		}
-
-	}
-
-	/*=============================================
-	EXISTEN PRODUCTOS FÍSICOS
-	=============================================*/
-
-	if(tipoArray.find(checkTipo) == "fisico"){
-
-		$(".seleccionePais").html('<select class="form-control" id="seleccionarPais" required>'+
-						
-						          '<option value="">Seleccione el país</option>'+
-
-					              '</select>');
-
-
-		$(".formEnvio").show();
-
-		$(".btnPagar").attr("tipo","fisico");
-
-		$.ajax({
-			url:rutaOculta+"vistas/js/plugins/countries.json",
-			type: "GET",
-			cache: false,
-			contentType: false,
-			processData:false,
-			dataType:"json",
-			success: function(respuesta){
-
-				respuesta.forEach(seleccionarPais);
-
-				function seleccionarPais(item, index){
-
-					var pais = item.name;
-					var codPais = item.code;
-
-					$("#seleccionarPais").append('<option value="'+codPais+'">'+pais+'</option>');
-				
-				}
-
-			}
-		})
-
-		/*=============================================
-		EVALUAR TASAS DE ENVÍO SI EL PRODUCTO ES FÍSICO
-		=============================================*/
-
-		$("#seleccionarPais").change(function(){
-
-			$(".alert").remove();
-
-			var pais = $(this).val();
-
-			actualizarResumenCheckout(pais, function(){
-				pagarConPayu();
+			respuesta.forEach(function(item){
+				$("#seleccionarPais").append(
+					'<option value="'+item.code+'">'+item.name+'</option>'
+				);
 			});
-
-		})
-
-	}else{
-
-		$(".btnPagar").attr("tipo","virtual");
-	}
+		}
+	});
 
 	actualizarResumenCheckout("");
-
 })
+
+$(document).on("change", "#seleccionarPais", function(){
+
+	$(".alert.checkoutError").remove();
+
+	var pais = $(this).val();
+
+	if(!pais){
+		$(".btnPagar").prop("disabled", true);
+		$(".btnMercadoPago").prop("disabled", true);
+		return;
+	}
+
+	actualizarResumenCheckout(pais, function(respuesta){
+
+		if(pais !== "AR" && $("#checkPayu").is(":checked")){
+			pagarConPayu();
+		}
+	});
+})
+
 
 /*=============================================
 /*=============================================
@@ -1131,6 +1113,103 @@ $("#cambiarDivisa").change(function(){
 
 })
 
+
+/*=============================================
+BOTÓN MERCADO PAGO
+=============================================*/
+
+$(document).on("click", ".btnMercadoPago", function(){
+
+	var boton = $(this);
+	var pais = $("#seleccionarPais").val();
+
+	if(pais !== "AR"){
+		return;
+	}
+
+	if(!validarCantidadesCarrito(true)){
+		return;
+	}
+
+	var ids = [];
+	var cantidades = [];
+
+	$(".cuerpoCarrito .cantidadItem, .comprarAhora .cantidadItem").each(function(){
+
+		var idProducto = Number($(this).attr("idProducto"));
+		var cantidad = Number($(this).val());
+
+		if(Number.isInteger(idProducto) && idProducto > 0 &&
+		   Number.isInteger(cantidad) && cantidad >= 1 && cantidad <= 100){
+
+			ids.push(idProducto);
+			cantidades.push(cantidad);
+		}
+	});
+
+	if(ids.length === 0 || ids.length !== cantidades.length){
+
+		swal({
+			title: "Carrito inválido",
+			text: "No se pudo preparar el pedido.",
+			type: "error",
+			confirmButtonText: "Cerrar"
+		});
+		return;
+	}
+
+	boton.prop("disabled", true).text("PREPARANDO MERCADO PAGO...");
+
+	var datos = new FormData();
+	datos.append("crearOrdenMercadoPago", "1");
+	datos.append("productos", JSON.stringify(ids));
+	datos.append("cantidades", JSON.stringify(cantidades));
+	datos.append("pais", pais);
+	datos.append("region", "");
+
+	$.ajax({
+		url: rutaOculta+"ajax/carrito.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function(respuesta){
+
+			if(respuesta.checkout_url){
+				window.location.href = respuesta.checkout_url;
+				return;
+			}
+
+			swal({
+				title: "No se pudo iniciar el pago",
+				text: "Mercado Pago no devolvió una URL de checkout.",
+				type: "error",
+				confirmButtonText: "Cerrar"
+			});
+		},
+		error: function(xhr){
+
+			var mensaje = "No se pudo iniciar el pago con Mercado Pago.";
+
+			if(xhr.responseJSON){
+				mensaje = xhr.responseJSON.detalle || xhr.responseJSON.error || mensaje;
+			}
+
+			swal({
+				title: "Mercado Pago",
+				text: mensaje,
+				type: "warning",
+				confirmButtonText: "Cerrar"
+			});
+		},
+		complete: function(){
+
+			boton.prop("disabled", false).text("PAGAR CON MERCADO PAGO");
+		}
+	});
+})
 
 /*=============================================
 /*=============================================
