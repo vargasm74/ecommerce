@@ -104,3 +104,54 @@ El secreto nunca debe subirse al repositorio. Tras cambiar variables de entorno:
 ```powershell
 docker compose up -d --force-recreate app
 ```
+
+
+## Mercado Pago TEST y Webhook
+
+La integracion moderna usa la SDK oficial `mercadopago/dx-php`, instalada
+dentro de la imagen Docker en `/var/www/html/vendor`.
+
+Variables locales requeridas:
+
+```env
+MERCADOPAGO_ENABLED=true
+MERCADOPAGO_ACCESS_TOKEN=
+MERCADOPAGO_WEBHOOK_SECRET=
+MERCADOPAGO_CURRENCY=ARS
+USD_TO_ARS_RATE=
+```
+
+Nunca versionar Access Token ni Webhook Secret.
+
+Para desarrollo local, Mercado Pago necesita una URL HTTPS publica para enviar
+webhooks. Puede usarse un Cloudflare Quick Tunnel:
+
+```powershell
+cloudflared tunnel --url http://localhost:8080
+```
+
+El comando devuelve una URL temporal similar a:
+
+```text
+https://xxxxx.trycloudflare.com
+```
+
+Configurar en Mercado Pago, modo de prueba, el webhook:
+
+```text
+https://xxxxx.trycloudflare.com/frontend/mercadopago-webhook.php
+```
+
+Seleccionar el evento `Order (Mercado Pago)`.
+
+La URL de Quick Tunnel cambia al reiniciar el proceso. Es solo para desarrollo
+y testing; para staging/produccion usar un hostname estable.
+
+El webhook:
+
+1. valida `x-signature` con la SDK oficial y `MERCADOPAGO_WEBHOOK_SECRET`;
+2. consulta la Order real en Mercado Pago;
+3. localiza el pedido interno por `external_reference`;
+4. valida ID de proveedor, moneda e importe;
+5. solo marca `PAID` cuando Mercado Pago informa `processed/accredited`
+   y los importes coinciden.
