@@ -153,7 +153,7 @@ class MercadoPago
 
         $requestOptions = new RequestOptions();
         $requestOptions->setCustomHeaders(array(
-            "X-Idempotency-Key" => $idempotencyKey
+            "X-Idempotency-Key: ".$idempotencyKey
         ));
 
         $client = new OrderClient();
