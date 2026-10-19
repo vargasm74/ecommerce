@@ -124,7 +124,21 @@ USD_TO_ARS_RATE=
 Nunca versionar Access Token ni Webhook Secret.
 
 Para desarrollo local, Mercado Pago necesita una URL HTTPS publica para enviar
-webhooks. Puede usarse un Cloudflare Quick Tunnel:
+webhooks. El compose incluye un Cloudflare Quick Tunnel opcional, por lo que no
+es necesario instalar `cloudflared` en Windows:
+
+```powershell
+docker compose --profile tunnel up tunnel
+```
+
+Para ejecutarlo en segundo plano:
+
+```powershell
+docker compose --profile tunnel up -d tunnel
+docker compose logs -f tunnel
+```
+
+Tambien puede usarse un binario local de Cloudflare:
 
 ```powershell
 cloudflared tunnel --url http://localhost:8080
