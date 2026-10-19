@@ -1,5 +1,20 @@
 <?php
 
+$mercadoPagoAutoload = dirname(__DIR__, 2)."/vendor/autoload.php";
+
+if(!is_file($mercadoPagoAutoload)){
+    throw new RuntimeException(
+        "No se encontro vendor/autoload.php. Reconstruya la imagen para instalar la SDK de Mercado Pago."
+    );
+}
+
+require_once $mercadoPagoAutoload;
+
+use MercadoPago\Client\Common\RequestOptions;
+use MercadoPago\Client\Order\OrderClient;
+use MercadoPago\Exceptions\MPApiException;
+use MercadoPago\MercadoPagoConfig;
+
 class MercadoPago
 {
     private static function enabled(): bool
@@ -10,7 +25,7 @@ class MercadoPago
         );
     }
 
-    public static function crearOrder(array $payload, string $idempotencyKey): array
+    private static function configurarSdk(): void
     {
         if(!self::enabled()){
             throw new RuntimeException("Mercado Pago no esta habilitado");
@@ -22,62 +37,95 @@ class MercadoPago
             throw new RuntimeException("Falta MERCADOPAGO_ACCESS_TOKEN");
         }
 
+        MercadoPagoConfig::setAccessToken($accessToken);
+
+        if((getenv("APP_ENV") ?: "production") !== "production"){
+            MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
+        }
+    }
+
+    private static function mensajeApiException(MPApiException $e): string
+    {
+        $apiResponse = $e->getApiResponse();
+
+        if(!$apiResponse){
+            return "Error de API de Mercado Pago";
+        }
+
+        $status = (int) $apiResponse->getStatusCode();
+        $content = $apiResponse->getContent();
+        $detalle = null;
+
+        if(is_array($content)){
+            $detalle = $content["message"]
+                ?? $content["error"]
+                ?? null;
+
+            if($detalle === null && isset($content["cause"]) && is_array($content["cause"])){
+                $primeraCausa = $content["cause"][0] ?? null;
+
+                if(is_array($primeraCausa)){
+                    $detalle = $primeraCausa["description"]
+                        ?? $primeraCausa["code"]
+                        ?? null;
+                }
+            }
+        }
+
+        return "HTTP ".$status.($detalle ? " - ".$detalle : "");
+    }
+
+    public static function crearOrder(array $payload, string $idempotencyKey): array
+    {
+        self::configurarSdk();
+
         if($idempotencyKey === "" || strlen($idempotencyKey) > 128){
             throw new InvalidArgumentException("Idempotency key invalida");
         }
 
-        $json = json_encode(
-            $payload,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
-        );
-
-        $ch = curl_init("https://api.mercadopago.com/v1/orders");
-
-        curl_setopt_array($ch, array(
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_HTTPHEADER => array(
-                "Accept: application/json",
-                "Content-Type: application/json",
-                "Authorization: Bearer ".$accessToken,
-                "X-Idempotency-Key: ".$idempotencyKey
-            ),
-            CURLOPT_POSTFIELDS => $json
+        $requestOptions = new RequestOptions();
+        $requestOptions->setCustomHeaders(array(
+            "X-Idempotency-Key: ".$idempotencyKey
         ));
 
-        $body = curl_exec($ch);
+        $client = new OrderClient();
 
-        if($body === false){
-            $error = curl_error($ch);
-            curl_close($ch);
-            throw new RuntimeException("Error de conexion con Mercado Pago: ".$error);
+        try{
+
+            $order = $client->create($payload, $requestOptions);
+
+        }catch(MPApiException $e){
+
+            throw new RuntimeException(
+                "Mercado Pago rechazo la order: ".self::mensajeApiException($e),
+                0,
+                $e
+            );
+
+        }catch(Throwable $e){
+
+            throw new RuntimeException(
+                "No se pudo comunicar con Mercado Pago: ".$e->getMessage(),
+                0,
+                $e
+            );
         }
 
-        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $orderId = isset($order->id) ? trim((string) $order->id) : "";
+        $checkoutUrl = isset($order->checkout_url)
+            ? trim((string) $order->checkout_url)
+            : "";
 
-        $respuesta = json_decode($body, true);
-
-        if(!is_array($respuesta)){
-            throw new RuntimeException("Respuesta invalida de Mercado Pago");
+        if($orderId === "" || $checkoutUrl === ""){
+            throw new RuntimeException(
+                "Mercado Pago no devolvio id/checkout_url"
+            );
         }
 
-        if($status < 200 || $status >= 300){
-            $detalle = $respuesta["message"]
-                ?? $respuesta["error"]
-                ?? ("HTTP ".$status);
-
-            throw new RuntimeException("Mercado Pago rechazo la order: ".$detalle);
-        }
-
-        if(empty($respuesta["id"]) || empty($respuesta["checkout_url"])){
-            throw new RuntimeException("Mercado Pago no devolvio id/checkout_url");
-        }
-
-        return $respuesta;
+        return array(
+            "id" => $orderId,
+            "checkout_url" => $checkoutUrl,
+            "status" => isset($order->status) ? (string) $order->status : ""
+        );
     }
 }
