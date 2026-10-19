@@ -41,9 +41,8 @@ class MercadoPago
 
         MercadoPagoConfig::setAccessToken($accessToken);
 
-        if((getenv("APP_ENV") ?: "production") !== "production"){
-            MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
-        }
+        // Incluso en desarrollo usamos TLS verificado contra la API real de TEST.
+        MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::SERVER);
     }
 
     private static function mensajeApiException(MPApiException $e): string
@@ -154,7 +153,7 @@ class MercadoPago
 
         $requestOptions = new RequestOptions();
         $requestOptions->setCustomHeaders(array(
-            "X-Idempotency-Key: ".$idempotencyKey
+            "X-Idempotency-Key" => $idempotencyKey
         ));
 
         $client = new OrderClient();
