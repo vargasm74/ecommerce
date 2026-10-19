@@ -63,7 +63,14 @@ if(isset($_POST["calcularCheckout"])){
 		error_log("Checkout rechazado: ".$e->getMessage());
 		http_response_code(422);
 		header("Content-Type: application/json; charset=UTF-8");
-		echo json_encode(array("error" => "No se pudo calcular el carrito"));
+
+		$error = array("error" => "No se pudo calcular el carrito");
+
+		if((getenv("APP_ENV") ?: "production") === "development"){
+			$error["detalle"] = $e->getMessage();
+		}
+
+		echo json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
 	}
 
