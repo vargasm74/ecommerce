@@ -217,6 +217,178 @@ class ControladorCarrito{
 	}
 
 	/*=============================================
+	UUID V4 PARA IDEMPOTENCIA
+	=============================================*/
+
+	private static function uuidV4(){
+
+		$bytes = random_bytes(16);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+
+		$hex = bin2hex($bytes);
+
+		return substr($hex, 0, 8)."-".
+		       substr($hex, 8, 4)."-".
+		       substr($hex, 12, 4)."-".
+		       substr($hex, 16, 4)."-".
+		       substr($hex, 20, 12);
+	}
+
+	/*=============================================
+	CONFIGURACION DE PAGO ARGENTINA
+	=============================================*/
+
+	static public function ctrConfiguracionPagoArgentina(){
+
+		$rate = (float) (getenv("USD_TO_ARS_RATE") ?: 0);
+		$enabled = filter_var(
+			getenv("MERCADOPAGO_ENABLED") ?: "false",
+			FILTER_VALIDATE_BOOLEAN
+		);
+		$tokenConfigurado = trim((string) getenv("MERCADOPAGO_ACCESS_TOKEN")) !== "";
+
+		return array(
+			"moneda" => "ARS",
+			"cotizacion" => $rate > 0 ? $rate : null,
+			"mercadopago_habilitado" => $enabled && $tokenConfigurado
+		);
+	}
+
+	/*=============================================
+	CREAR ORDER MERCADO PAGO
+	=============================================*/
+
+	static public function ctrCrearOrdenMercadoPago($idUsuario, $email, $ids, $cantidades, $pais, $region = ""){
+
+		$idUsuario = filter_var($idUsuario, FILTER_VALIDATE_INT, array(
+			"options" => array("min_range" => 1)
+		));
+
+		$email = trim((string) $email);
+		$pais = strtoupper(trim((string) $pais));
+		$region = strtoupper(trim((string) $region));
+
+		if($idUsuario === false || !filter_var($email, FILTER_VALIDATE_EMAIL)){
+			throw new InvalidArgumentException("Usuario invalido para el pago");
+		}
+
+		if($pais !== "AR"){
+			throw new InvalidArgumentException("Mercado Pago esta habilitado solo para Argentina");
+		}
+
+		$config = self::ctrConfiguracionPagoArgentina();
+
+		if(!$config["mercadopago_habilitado"]){
+			throw new RuntimeException("Mercado Pago TEST no esta configurado");
+		}
+
+		$fxRate = (float) $config["cotizacion"];
+
+		if($fxRate <= 0){
+			throw new RuntimeException("Falta configurar USD_TO_ARS_RATE");
+		}
+
+		$resumen = self::ctrCalcularResumenCheckout(
+			$ids,
+			$cantidades,
+			$pais,
+			$region
+		);
+
+		$totalSource = (float) $resumen["total"];
+		$totalArs = round($totalSource * $fxRate, 2);
+
+		if($totalArs <= 0){
+			throw new RuntimeException("Monto invalido para Mercado Pago");
+		}
+
+		$idempotencyKey = self::uuidV4();
+
+		$orderId = ModeloCarrito::mdlCrearOrderInterna(
+			$idUsuario,
+			$resumen,
+			$pais,
+			$region,
+			number_format($fxRate, 6, ".", ""),
+			number_format($totalArs, 2, ".", ""),
+			$idempotencyKey
+		);
+
+		$totalFormateado = number_format($totalArs, 2, ".", "");
+
+		$payload = array(
+			"type" => "online",
+			"processing_mode" => "manual",
+			"total_amount" => $totalFormateado,
+			"external_reference" => "ecommerce_order_".$orderId,
+			"payer" => array(
+				"email" => $email
+			),
+			"items" => array(
+				array(
+					"title" => "Pedido ecommerce #".$orderId,
+					"unit_price" => $totalFormateado,
+					"quantity" => 1,
+					"unit_measure" => "unit",
+					"total_amount" => $totalFormateado
+				)
+			)
+		);
+
+		$successUrl = trim((string) getenv("MERCADOPAGO_SUCCESS_URL"));
+		$failureUrl = trim((string) getenv("MERCADOPAGO_FAILURE_URL"));
+		$pendingUrl = trim((string) getenv("MERCADOPAGO_PENDING_URL"));
+
+		if($successUrl !== "" || $failureUrl !== "" || $pendingUrl !== ""){
+
+			$payload["config"] = array(
+				"online" => array_filter(
+					array(
+						"success_url" => $successUrl,
+						"failure_url" => $failureUrl,
+						"pending_url" => $pendingUrl
+					),
+					fn($valor) => $valor !== ""
+				)
+			);
+		}
+
+		try{
+
+			$respuesta = MercadoPago::crearOrder($payload, $idempotencyKey);
+
+			ModeloCarrito::mdlActualizarOrderProveedor(
+				$orderId,
+				"PENDING_PAYMENT",
+				(string) $respuesta["id"],
+				(string) $respuesta["checkout_url"],
+				null
+			);
+
+			return array(
+				"order_id" => $orderId,
+				"provider_order_id" => (string) $respuesta["id"],
+				"checkout_url" => (string) $respuesta["checkout_url"],
+				"moneda" => "ARS",
+				"total" => $totalFormateado
+			);
+
+		}catch(Throwable $e){
+
+			ModeloCarrito::mdlActualizarOrderProveedor(
+				$orderId,
+				"PROVIDER_ERROR",
+				null,
+				null,
+				substr($e->getMessage(), 0, 500)
+			);
+
+			throw $e;
+		}
+	}
+
+	/*=============================================
 	VERIFICAR COMPRA DE USUARIO
 	=============================================*/
 
