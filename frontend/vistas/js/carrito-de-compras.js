@@ -756,14 +756,21 @@ function actualizarResumenCheckout(pais, alFinalizar){
 				alFinalizar(respuesta);
 			}
 		},
-		error: function(){
+		error: function(xhr){
 
 			$(".btnPagar").prop("disabled", true);
 			$(".formPayu input[name='Submit']").prop("disabled", true);
+			$(".btnMercadoPago").prop("disabled", true);
+
+			var mensaje = "Actualice el carrito e intente nuevamente.";
+
+			if(xhr.responseJSON){
+				mensaje = xhr.responseJSON.detalle || xhr.responseJSON.error || mensaje;
+			}
 
 			swal({
 				title: "No se pudo calcular la compra",
-				text: "Actualice el carrito e intente nuevamente.",
+				text: mensaje,
 				type: "error",
 				confirmButtonText: "Cerrar"
 			});
