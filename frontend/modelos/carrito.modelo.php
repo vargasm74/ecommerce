@@ -307,6 +307,75 @@ class ModeloCarrito{
 	}
 
 	/*=============================================
+	OBTENER PEDIDO INTERNO MERCADO PAGO
+	=============================================*/
+
+	static public function mdlObtenerOrderInterna($orderId){
+
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT id, user_id, status, source_currency, currency, fx_rate,
+			        subtotal_source, tax_source, shipping_source, total_source,
+			        total_amount, country, region, payment_provider,
+			        provider_order_id, provider_status, provider_status_detail
+			 FROM orders
+			 WHERE id = :id
+			   AND payment_provider = 'mercadopago'
+			 LIMIT 1"
+		);
+
+		$stmt->bindValue(":id", (int) $orderId, PDO::PARAM_INT);
+		$stmt->execute();
+
+		return $stmt->fetch();
+	}
+
+	/*=============================================
+	SINCRONIZAR ESTADO MERCADO PAGO
+	=============================================*/
+
+	static public function mdlSincronizarOrderMercadoPago(
+		$orderId,
+		$status,
+		$providerOrderId,
+		$providerStatus,
+		$providerStatusDetail,
+		$requestId,
+		$marcarPagado = false,
+		$errorMessage = null
+	){
+
+		$sql = "UPDATE orders
+		        SET status = :status,
+		            provider_order_id = :provider_order_id,
+		            provider_status = :provider_status,
+		            provider_status_detail = :provider_status_detail,
+		            last_webhook_at = NOW(),
+		            last_webhook_request_id = :request_id,
+		            error_message = :error_message";
+
+		if($marcarPagado){
+			$sql .= ", paid_at = COALESCE(paid_at, NOW())";
+		}
+
+		$sql .= " WHERE id = :id
+		          AND payment_provider = 'mercadopago'";
+
+		$stmt = Conexion::conectar()->prepare($sql);
+
+		$stmt->bindValue(":status", $status, PDO::PARAM_STR);
+		$stmt->bindValue(":provider_order_id", $providerOrderId, PDO::PARAM_STR);
+		$stmt->bindValue(":provider_status", $providerStatus, PDO::PARAM_STR);
+		$stmt->bindValue(":provider_status_detail", $providerStatusDetail, PDO::PARAM_STR);
+		$stmt->bindValue(":request_id", $requestId, $requestId === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+		$stmt->bindValue(":error_message", $errorMessage, $errorMessage === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+		$stmt->bindValue(":id", (int) $orderId, PDO::PARAM_INT);
+
+		$stmt->execute();
+
+		return true;
+	}
+
+	/*=============================================
 	NUEVAS COMPRAS
 	=============================================*/
 
