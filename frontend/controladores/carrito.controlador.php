@@ -422,6 +422,44 @@ class ControladorCarrito{
 	}
 
 	/*=============================================
+	EVITAR REGRESIONES DE ESTADO POR WEBHOOKS REPETIDOS
+	=============================================*/
+
+	private static function resolverTransicionEstadoMercadoPago($estadoActual, $estadoNuevo){
+
+		$estadoActual = strtoupper(trim((string) $estadoActual));
+		$estadoNuevo = strtoupper(trim((string) $estadoNuevo));
+
+		if(in_array($estadoActual, array("REFUNDED", "CHARGEBACK"), true)){
+			return $estadoActual;
+		}
+
+		if($estadoActual === "PARTIALLY_REFUNDED"
+		   && !in_array($estadoNuevo, array("REFUNDED", "CHARGEBACK"), true)){
+			return $estadoActual;
+		}
+
+		if($estadoActual === "PAID"
+		   && in_array(
+			$estadoNuevo,
+			array(
+				"PENDING_PROVIDER",
+				"PENDING_PAYMENT",
+				"PENDING",
+				"ACTION_REQUIRED",
+				"REJECTED",
+				"CANCELED",
+				"UNKNOWN_PROVIDER_STATUS"
+			),
+			true
+		   )){
+			return "PAID";
+		}
+
+		return $estadoNuevo;
+	}
+
+	/*=============================================
 	PROCESAR WEBHOOK MERCADO PAGO
 	=============================================*/
 
@@ -463,7 +501,7 @@ class ControladorCarrito{
 			ModeloCarrito::mdlSincronizarOrderMercadoPago(
 				$orderId,
 				"PAYMENT_MISMATCH",
-				$providerOrderId,
+				(string) $orderInterna["provider_order_id"],
 				(string) $orderMp["status"],
 				(string) $orderMp["status_detail"],
 				$requestId,
@@ -512,6 +550,13 @@ class ControladorCarrito{
 				"order_id" => $orderId
 			);
 		}
+
+		$estadoInterno = self::resolverTransicionEstadoMercadoPago(
+			$orderInterna["status"],
+			$estadoInterno
+		);
+
+		$esPagoAcreditado = $estadoInterno === "PAID";
 
 		ModeloCarrito::mdlSincronizarOrderMercadoPago(
 			$orderId,
