@@ -275,6 +275,11 @@ VENTANA MODAL PARA CHECKOUT
 									<td><strong><span class="cambioDivisa">USD</span> $<span class="valorTotalCompra" valor="0">0</span></strong></td>	
 								</tr>
 
+								<tr class="filaTotalMercadoPago" style="display:none">
+									<td><strong>Total Mercado Pago</strong></td>
+									<td><strong>ARS $<span class="valorTotalMercadoPago">0.00</span></strong></td>
+								</tr>
+
 							</tbody>	
 
 						</table>
@@ -294,6 +299,11 @@ VENTANA MODAL PARA CHECKOUT
 					</div>
 
 					<div class="clearfix"></div>
+
+					<div class="mercadoPagoInfo alert alert-info text-center" style="display:none">
+						<strong>Pago en Argentina</strong><br>
+						<span class="mercadoPagoEstado">El total se calculará en ARS desde el servidor.</span>
+					</div>
 
 					<form class="formPayu" style="display:none">
 					 
@@ -317,7 +327,11 @@ VENTANA MODAL PARA CHECKOUT
 					  <input name="Submit" class="btn btn-block btn-lg btn-default backColor" type="submit"  value="PAGAR" >
 					</form>
 					
-					<button class="btn btn-block btn-lg btn-default backColor btnPagar">PAGAR</button>
+					<button type="button" class="btn btn-block btn-lg btn-default backColor btnPagar">PAGAR</button>
+
+					<button type="button" class="btn btn-block btn-lg btn-default backColor btnMercadoPago" style="display:none" disabled>
+						PAGAR CON MERCADO PAGO
+					</button>
 
 				</div>
 
