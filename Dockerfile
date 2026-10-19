@@ -1,5 +1,7 @@
 FROM php:8.4-apache-bookworm
 
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
@@ -27,6 +29,15 @@ COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.con
 COPY docker/php/ecommerce.ini /usr/local/etc/php/conf.d/zz-ecommerce.ini
 
 WORKDIR /var/www/html
+
+COPY composer.json /var/www/html/composer.json
+
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --optimize-autoloader
 
 COPY . /var/www/html
 
