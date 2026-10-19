@@ -180,7 +180,7 @@ VENTANA MODAL PARA CHECKOUT
 				
 				<div class="formEnvio row">
 					
-					<h4 class="text-center well text-muted text-uppercase">Información de envío</h4>
+					<h4 class="text-center well text-muted text-uppercase">País de compra / envío</h4>
 
 					<div class="col-xs-12 seleccionePais">
 						
