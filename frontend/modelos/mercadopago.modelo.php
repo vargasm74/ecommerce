@@ -12,8 +12,10 @@ require_once $mercadoPagoAutoload;
 
 use MercadoPago\Client\Common\RequestOptions;
 use MercadoPago\Client\Order\OrderClient;
+use MercadoPago\Exceptions\InvalidWebhookSignatureException;
 use MercadoPago\Exceptions\MPApiException;
 use MercadoPago\MercadoPagoConfig;
+use MercadoPago\Webhook\WebhookSignatureValidator;
 
 class MercadoPago
 {
@@ -73,6 +75,73 @@ class MercadoPago
         }
 
         return "HTTP ".$status.($detalle ? " - ".$detalle : "");
+    }
+
+    public static function validarFirmaWebhook(
+        ?string $xSignature,
+        ?string $xRequestId,
+        ?string $dataId
+    ): void {
+        $secret = trim((string) getenv("MERCADOPAGO_WEBHOOK_SECRET"));
+
+        if($secret === ""){
+            throw new RuntimeException("Falta MERCADOPAGO_WEBHOOK_SECRET");
+        }
+
+        try{
+            WebhookSignatureValidator::validate(
+                $xSignature,
+                $xRequestId,
+                $dataId,
+                $secret
+            );
+        }catch(InvalidWebhookSignatureException $e){
+            throw $e;
+        }
+    }
+
+    public static function consultarOrder(string $providerOrderId): array
+    {
+        self::configurarSdk();
+
+        $providerOrderId = trim($providerOrderId);
+
+        if($providerOrderId === ""){
+            throw new InvalidArgumentException("Order id de Mercado Pago invalido");
+        }
+
+        $client = new OrderClient();
+
+        try{
+
+            $order = $client->get($providerOrderId);
+
+        }catch(MPApiException $e){
+
+            throw new RuntimeException(
+                "No se pudo consultar la order: ".self::mensajeApiException($e),
+                0,
+                $e
+            );
+
+        }catch(Throwable $e){
+
+            throw new RuntimeException(
+                "No se pudo consultar la order: ".$e->getMessage(),
+                0,
+                $e
+            );
+        }
+
+        return array(
+            "id" => isset($order->id) ? (string) $order->id : "",
+            "external_reference" => isset($order->external_reference) ? (string) $order->external_reference : "",
+            "status" => isset($order->status) ? (string) $order->status : "",
+            "status_detail" => isset($order->status_detail) ? (string) $order->status_detail : "",
+            "currency" => isset($order->currency) ? (string) $order->currency : "",
+            "total_amount" => isset($order->total_amount) ? (string) $order->total_amount : "",
+            "total_paid_amount" => isset($order->total_paid_amount) ? (string) $order->total_paid_amount : ""
+        );
     }
 
     public static function crearOrder(array $payload, string $idempotencyKey): array
